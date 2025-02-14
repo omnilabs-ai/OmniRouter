@@ -5,7 +5,7 @@ from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionRe
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+load_dotenv()
 
 class AnthropicProvider(ChatProvider):
     """Anthropic chat completion provider"""

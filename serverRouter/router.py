@@ -16,12 +16,6 @@ from serverRouter.core.models import (
     CHAT_MODELS,
     IMAGE_MODELS
 )
-import os
-import logging
-import asyncio
-
-# Configure logging (if not already configured)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = FastAPI(title="OmniLLM", description="One Key, One API, Hundreds of Models")
 security = HTTPBearer()
@@ -40,7 +34,6 @@ def initialize_providers():
             ModelProvider.DEEPSEEK: DeepSeekProvider()
         }
     except Exception as e:
-        logging.error(f"Failed to initialize providers: {e}")
         raise  # Re-raise to prevent the server from starting
 
 # Initialize providers during startup
@@ -133,7 +126,6 @@ async def create_chat_completion(
         return response
 
     except Exception as e:
-        logging.exception("Error during chat completion:")  # Log the full exception
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/v1/images/generate")
@@ -169,15 +161,9 @@ async def create_image(
                 detail="Google Cloud Project ID and Location are required for Gemini models"
             )
 
-        # Log the request and the provider being used
-        logging.info(f"Image generation request received. Model: {request.model}, Provider: {model_info.provider}")
-
-        # Generate the images
-
         response = await provider.generate_image(request)
 
         return response
 
     except Exception as e:
-        logging.exception("Error during image generation:")
         raise HTTPException(status_code=500, detail=str(e))

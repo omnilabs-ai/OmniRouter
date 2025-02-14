@@ -3,11 +3,11 @@ from openai import AsyncOpenAI
 from serverRouter.core.interfaces import ChatProvider
 from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionResponse
 from serverRouter.core.exceptions import ProviderError
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 import os
 import logging
 
-load_dotenv(find_dotenv())
+load_dotenv()
 
 class DeepSeekProvider(ChatProvider):
     """DeepSeek R1 provider with tool calling support"""
@@ -83,5 +83,4 @@ class DeepSeekProvider(ChatProvider):
             )
             
         except Exception as e:
-            logging.error(f"DeepSeek R1 API Error: {str(e)}")
             raise ProviderError(f"API request failed: {str(e)}")

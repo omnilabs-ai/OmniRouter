@@ -69,12 +69,6 @@ CHAT_MODELS = {
         description="Gemini 2.0 Flash Thinking (Reasoning)",
         max_tokens=8192,  # Adjust as needed
     ),
-    "gemini-2.0-flash-exp": ModelInfo(
-        name="gemini-2.0-flash-exp",
-        provider=ModelProvider.GEMINI,
-        description="Gemini 2.0 Flash (Next generation features)",
-        max_tokens=8192,  # Adjust as needed
-    ),
     "gemini-exp-1206": ModelInfo(
         name="gemini-exp-1206",
         provider=ModelProvider.GEMINI,
@@ -105,15 +99,3 @@ IMAGE_MODELS = {
 
 # Combined models dictionary
 MODELS = {**CHAT_MODELS, **IMAGE_MODELS}
-
-# Index models by provider for easy lookup
-MODELS_BY_PROVIDER = {}
-for model_id, model in MODELS.items():
-    MODELS_BY_PROVIDER.setdefault(model.provider, []).append(model_id)
-
-def get_model_by_id(model_id: str) -> ModelInfo | None:
-    return MODELS.get(model_id)
-
-def get_models_by_provider(provider: ModelProvider) -> list[ModelInfo]:
-    model_ids = MODELS_BY_PROVIDER.get(provider, [])
-    return [MODELS[model_id] for model_id in model_ids]

@@ -1,7 +1,6 @@
 from typing import Dict, Any
 from openai import AsyncOpenAI
 import os
-import openai
 from serverRouter.core.interfaces import ChatProvider, ImageProvider
 from serverRouter.core.datamodels import (
     ChatCompletionRequest, 
@@ -10,11 +9,6 @@ from serverRouter.core.datamodels import (
     ImageGenerationResponse
 )
 from serverRouter.core.exceptions import ProviderError
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,8 +18,7 @@ class OpenAIProvider(ChatProvider, ImageProvider):
     def __init__(self, api_key: str = None):
         """Initialize the OpenAI provider with API key from environment"""
         try:
-            if api_key is None:
-                api_key = os.getenv("OPENAI_API_KEY")
+            api_key = api_key or os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise ProviderError("OPENAI_API_KEY not set in environment.")
             self.client = AsyncOpenAI(api_key=api_key)

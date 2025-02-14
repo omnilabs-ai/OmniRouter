@@ -1,8 +1,7 @@
 # serverRouter/providers/gemini/provider.py
-import asyncio
 from typing import Dict, Any, List, Union
 from google import generativeai as genai
-import asyncio
+import os
 from typing import Dict, Any, List, Union
 from serverRouter.core.interfaces import ChatProvider
 from serverRouter.core.datamodels import (
@@ -10,26 +9,15 @@ from serverRouter.core.datamodels import (
     ChatCompletionResponse,
 )
 from serverRouter.core.exceptions import ProviderError
-from dotenv import load_dotenv, find_dotenv
-import os
-import logging
-load_dotenv(find_dotenv())
+from dotenv import load_dotenv
+load_dotenv()
 
 class GeminiProvider(ChatProvider):
     def __init__(self, api_key: str = None):
-        if api_key is None:
-            api_key = os.getenv("GEMINI_API_KEY")
+        api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ProviderError("No GEMINI_API_KEY provided. Please add it to your .env file.")
-
-        try:
-            # genai.configure(api_key=api_key) #no longer using this
-            pass
-            # Removed self.model_name, as we'll handle models dynamically
-        except Exception as e:
-            logging.exception("Error initializing Gemini client:")
-            raise ProviderError(f"Failed to initialize Gemini client: {str(e)}")
-
+        
     async def chat_complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         try:
             messages = []
@@ -54,6 +42,5 @@ class GeminiProvider(ChatProvider):
                     usage={}  #  Gemini doesn't directly provide usage in the same way
                 )
         except Exception as e:
-            logging.exception("Gemini API error (chat):")
             raise ProviderError(f"Gemini API error (chat): {str(e)}")
         

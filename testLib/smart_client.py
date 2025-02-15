@@ -37,7 +37,7 @@ class TestRouter:
         
         for case in test_cases:
             # Get model recommendation
-            result = client.select_model(**case["params"])
+            result = client.smart_select(**case["params"])
             
             # Verify response structure
             assert isinstance(result, dict), f"Failed {case['name']}: Expected dict response for verbose mode"

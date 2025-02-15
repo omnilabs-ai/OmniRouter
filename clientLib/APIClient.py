@@ -113,7 +113,7 @@ class APIClient:
             image_models = self._make_request("v1/models/image")["models"]
             return chat_models + image_models
 
-    def select_model(
+    def smart_select(
         self,
         query: str,
         k: int = 5,

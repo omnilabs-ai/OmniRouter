@@ -1,6 +1,6 @@
 import os
 import requests
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from dotenv import load_dotenv
 
 class APIClient:
@@ -112,6 +112,48 @@ class APIClient:
             chat_models = self._make_request("v1/models/chat")["models"]
             image_models = self._make_request("v1/models/image")["models"]
             return chat_models + image_models
+
+    def select_model(
+        self,
+        query: str,
+        k: int = 5,
+        model_names: Optional[List[str]] = None,
+        rel_cost: float = 0.5,
+        rel_latency: float = 0.0,
+        rel_accuracy: float = 0.5,
+        verbose: bool = False
+    ) -> Union[str, Dict[str, str]]:
+        """
+        Get model recommendation based on query and preferences.
+        
+        Args:
+            query (str): The query text to analyze for model selection
+            k (int, optional): Number of top models to consider. Defaults to 5.
+            model_names (List[str], optional): Specific models to select from. Defaults to None.
+            rel_cost (float, optional): Relative importance of cost (0-1). Defaults to 0.5.
+            rel_latency (float, optional): Relative importance of latency (0-1). Defaults to 0.0.
+            rel_accuracy (float, optional): Relative importance of accuracy (0-1). Defaults to 0.5.
+            verbose (bool, optional): Whether to return detailed explanation. Defaults to False.
+            
+        Returns:
+            If verbose=False: str - Name of the recommended model
+            If verbose=True: dict - Contains model name and detailed explanation
+        """
+        request_data = {
+            "query": query,
+            "k": k,
+            "model_names": model_names,
+            "rel_cost": rel_cost,
+            "rel_latency": rel_latency,
+            "rel_accuracy": rel_accuracy,
+            "verbose": verbose
+        }
+        
+        return self._make_request(
+            endpoint="/v1/router/select-model",
+            method="POST",
+            json=request_data
+        )
 
 # Usage example:
 # client = APIClient(api_key='your-api-key-here')

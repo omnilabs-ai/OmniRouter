@@ -1,6 +1,7 @@
-from typing import List, Optional, Dict, Literal, Union
+from typing import List, Optional, Dict, Literal, Union, Any
 from pydantic import BaseModel, Field
 from enum import Enum
+from collections.abc import Mapping
 
 class ModelProvider(str, Enum):
     """Supported model providers"""
@@ -8,13 +9,6 @@ class ModelProvider(str, Enum):
     ANTHROPIC = "anthropic"
     GEMINI = "gemini"
     DEEPSEEK = "deepseek"
-
-class ModelInfo(BaseModel):
-    """Information about a model"""
-    name: str = Field(..., description="Full name/version of the model")
-    provider: ModelProvider = Field(..., description="Provider of the model")
-    description: str = Field(..., description="Description of the model")
-    max_tokens: Optional[int] = Field(None, description="Maximum context length")
 
 ## Chat Completion Models
 class ChatMessage(BaseModel):
@@ -60,3 +54,88 @@ class ImageGenerationResponse(BaseModel):
     urls: List[str] = Field(..., description="URLs of the generated images")
     model: str = Field(..., description="Name of the model used")
     provider: str = Field(..., description="Provider that generated the images")
+
+class BenchmarkScores(BaseModel, Mapping):
+    MMLU: Optional[float] = Field(None, ge=0.0, le=1.0)
+    GPQA: Optional[float] = Field(None, ge=0.0, le=1.0)
+    HumanEval: Optional[float] = Field(None, ge=0.0, le=1.0)
+    MATH: Optional[float] = Field(None, ge=0.0, le=1.0)
+    BFCL: Optional[float] = Field(None, ge=0.0, le=1.0)
+    MGSM: Optional[float] = Field(None, ge=0.0, le=1.0)
+
+    class Config:
+        validate_assignment = True
+
+    def __getitem__(self, key: str) -> Optional[float]:
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: Optional[float]) -> None:
+        setattr(self, key, value)
+
+    def __iter__(self):
+        return iter(self.__fields__)
+
+    def __len__(self) -> int:
+        return len(self.__fields__)
+
+    def update(self, other: Dict[str, Optional[float]]) -> None:
+        for key, value in other.items():
+            self[key] = value
+
+class ModelInfo(BaseModel):
+    """Information about a model"""
+    name: str = Field(..., description="Full name/version of the model")
+    provider: ModelProvider = Field(..., description="Provider of the model")
+    description: str = Field(..., description="Description of the model")
+    max_tokens: Optional[int] = Field(None, description="Maximum context length")
+    benchmarks: Optional[BenchmarkScores] = Field(
+        default=None,
+        description="Model benchmark scores"
+    )
+    tokenCost: Optional[float] = Field(
+        default=None,
+        description="Cost per 1000 tokens in USD"
+    )
+    latency: Optional[float] = Field(
+        default=None,
+        description="Average latency in seconds per request"
+    )
+
+class SmartRouterRequest(BaseModel):
+    """Input parameters for smart router model selection"""
+    query: str = Field(
+        ..., 
+        description="The query text to analyze for model selection"
+    )
+    k: int = Field(
+        default=5, 
+        ge=1, 
+        le=10, 
+        description="Number of top models to consider"
+    )
+    model_names: Optional[List[str]] = Field(
+        default=None, 
+        description="Optional list of specific models to select from. If None, all available models are considered"
+    )
+    rel_cost: float = Field(
+        default=0.5, 
+        ge=0.0, 
+        le=1.0, 
+        description="Relative importance of cost optimization (0-1)"
+    )
+    rel_latency: float = Field(
+        default=0.0, 
+        ge=0.0, 
+        le=1.0, 
+        description="Relative importance of latency optimization (0-1)"
+    )
+    rel_accuracy: float = Field(
+        default=0.5, 
+        ge=0.0, 
+        le=1.0, 
+        description="Relative importance of accuracy optimization (0-1)"
+    )
+    verbose: bool = Field(
+        default=False, 
+        description="Whether to return detailed explanation of the model selection process"
+    )

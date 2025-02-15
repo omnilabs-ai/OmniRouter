@@ -5,7 +5,8 @@ from serverRouter.core.datamodels import (
     ChatCompletionResponse,
     ModelProvider,
     ImageGenerationRequest,
-    ImageGenerationResponse
+    ImageGenerationResponse,
+    SmartRouterRequest
 )
 from serverRouter.providers.anthropic.provider import AnthropicProvider
 from serverRouter.providers.openai.provider import OpenAIProvider
@@ -16,6 +17,7 @@ from serverRouter.core.models import (
     CHAT_MODELS,
     IMAGE_MODELS
 )
+from serverRouter.smartRouter.SmartRouter import SmartRouter
 
 app = FastAPI(title="OmniLLM", description="One Key, One API, Hundreds of Models")
 security = HTTPBearer()
@@ -43,6 +45,9 @@ except Exception:
     # Handle the error appropriately (e.g., log, exit)
     import sys
     sys.exit(1)  # Exit if provider initialization fails
+
+# Initialize SmartRouter
+smart_router = SmartRouter(verbose=True)
 
 VALID_API_KEYS = {
     "test-sk1o83e",
@@ -164,6 +169,34 @@ async def create_image(
         response = await provider.generate_image(request)
 
         return response
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/v1/router/select-model")
+async def select_model(
+    request: SmartRouterRequest,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Get model recommendations based on the query and preferences.
+    """
+    try:
+        result = smart_router.get_top_user_models(
+            query=request.query,
+            k=request.k,
+            model_names=request.model_names,
+            rel_cost=request.rel_cost,
+            rel_latency=request.rel_latency,
+            rel_accuracy=request.rel_accuracy
+        )
+        
+        if request.verbose:
+            return {
+                "selected_model": result["model"],
+                "explanation": result["explanation"]
+            }
+        return {"selected_model": result}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

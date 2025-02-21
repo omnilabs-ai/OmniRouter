@@ -111,15 +111,8 @@ CHAT_MODELS = {
         max_tokens=4096
     ),
     # --- New Gemini Chat Models ---
-    "gemini-2.0-flash": ModelInfo(
-        name="gemini-2.0-flash",
-        provider=ModelProvider.GEMINI,
-        description="Google Gemini 2.0 Flash for chat completions",
-        max_tokens=4096,
-        
-    ),
-    "gemini-2.0-pro": ModelInfo(
-        name="gemini-2.0-pro",
+    "gemini-2.0-flash-lite": ModelInfo(
+        name="gemini-2.0-flash-lite-preview-02-05",
         provider=ModelProvider.GEMINI,
         description=(
             "Google's most advanced model for technical and scientific tasks. "
@@ -138,23 +131,17 @@ CHAT_MODELS = {
         tokenCost=0.02,  # mock
         latency=1.7  # mock
     ),
-    "gemini-2.0-pro-exp-02-05": ModelInfo(
+    "gemini-2.0-flash-lite": ModelInfo(
+        name="gemini-2.0-flash-lite-preview-02-05",
+        provider=ModelProvider.GEMINI,
+        description="Gemini 2.0 Flash Lite",
+        max_tokens=8192,  # Adjust as needed
+    ),
+    "gemini-2.0-pro": ModelInfo(
         name="gemini-2.0-pro-exp-02-05",
         provider=ModelProvider.GEMINI,
-        description="Gemini 2.0 Pro (Improved quality)",
+        description="Gemini 2.0 Pro",
         max_tokens=8192,  # Adjust as needed
-    ),
-    "gemini-2.0-flash-thinking-exp-01-21": ModelInfo(
-        name="gemini-2.0-flash-thinking-exp-01-21",
-        provider=ModelProvider.GEMINI,
-        description="Gemini 2.0 Flash Thinking (Reasoning)",
-        max_tokens=8192,  # Adjust as needed
-    ),
-    "gemini-exp-1206": ModelInfo(
-        name="gemini-exp-1206",
-        provider=ModelProvider.GEMINI,
-        description="Gemini (Quality improvements)",
-        max_tokens=8192, # Adjust as needed
     ),
     "learnlm-1.5-pro-experimental": ModelInfo(
         name="learnlm-1.5-pro-experimental",

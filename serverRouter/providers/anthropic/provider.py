@@ -35,7 +35,8 @@ class AnthropicProvider(ChatProvider):
                     {"role": msg.role, "content": msg.content}
                     for msg in request.messages
                 ],
-                max_tokens=request.max_tokens if request.max_tokens else None
+                max_tokens=request.max_tokens or 4092,
+                temperature=request.temperature or 1.0
             )
             
             # Convert Anthropic response to our generic format

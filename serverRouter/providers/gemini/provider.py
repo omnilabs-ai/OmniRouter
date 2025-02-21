@@ -17,6 +17,7 @@ class GeminiProvider(ChatProvider):
         api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ProviderError("No GEMINI_API_KEY provided. Please add it to your .env file.")
+        genai.configure(api_key=api_key)
         
     async def chat_complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         try:
@@ -26,11 +27,12 @@ class GeminiProvider(ChatProvider):
 
             model = genai.GenerativeModel(model_name=request.model)
 
-            response = await model.generate_content_async(
+            # Use synchronous version for simpler operation
+            response = model.generate_content(
                 contents=messages,
                 generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=request.max_tokens or 2048,  # Increased default
-                    temperature=request.temperature
+                    max_output_tokens=request.max_tokens or 2048,
+                    temperature=request.temperature or 1.0
                 )
             )
 
@@ -39,8 +41,11 @@ class GeminiProvider(ChatProvider):
                     model=request.model,
                     content=response.text,
                     provider="gemini",
-                    usage={}  #  Gemini doesn't directly provide usage in the same way
+                    usage={}  # Gemini doesn't directly provide usage stats
                 )
+            else:
+                raise ProviderError("Empty response from Gemini API")
+                
         except Exception as e:
             raise ProviderError(f"Gemini API error (chat): {str(e)}")
         

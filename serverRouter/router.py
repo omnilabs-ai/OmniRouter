@@ -74,6 +74,10 @@ async def list_models(api_key: str = Depends(verify_api_key)):
         ]
     }
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome to OmniLLM!"}
+
 @app.get("/v1/models/chat")
 async def list_chat_models(api_key: str = Depends(verify_api_key)):
     """List all available chat models"""

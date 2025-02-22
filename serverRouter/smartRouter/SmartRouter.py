@@ -1,10 +1,10 @@
-from sentence_transformers import SentenceTransformer
 from serverRouter.core.models import CHAT_MODELS
 import pickle
 import os
 from typing import Dict, Union, Tuple
 import numpy as np
 from dataclasses import dataclass
+from serverRouter.smartRouter.embedding_model import OpenAIEmbeddings
 
 @dataclass
 class RouterDecision:
@@ -52,8 +52,8 @@ class RouterDecision:
         return "\n".join(output)
 
 class SmartRouter:
-    def __init__(self, embeddings_file: str = "serverRouter/smartRouter/benchmark_embeddings.pkl", verbose: bool = False) -> None:
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+    def __init__(self, embeddings_file: str = "serverRouter/smartRouter/benchmark_embeddings.pkl", verbose: bool = False, api_key: str | None = None) -> None:
+        self.model = OpenAIEmbeddings(api_key=api_key)
         self.benchmark_embeddings: Dict[str, np.ndarray] = {}
         self.verbose = verbose
         

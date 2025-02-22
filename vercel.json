@@ -1,0 +1,18 @@
+{
+    "builds": [
+        {
+            "src": "serverRouter/router.py",
+            "use": "@vercel/python",
+            "config": {
+                "runtime": "python3.12",
+                "requirementsPath": "requirements.txt"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "serverRouter/router.py"
+        }
+    ]
+}

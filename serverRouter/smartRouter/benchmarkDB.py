@@ -10,7 +10,7 @@ IMPORTANT:
 
 from typing import Dict
 import pickle
-from sentence_transformers import SentenceTransformer
+from embedding_model import OpenAIEmbeddings
 
 BENCHMARKS: Dict[str, Dict[str, str]] = {
     "MMLU": {
@@ -57,9 +57,9 @@ BENCHMARKS: Dict[str, Dict[str, str]] = {
     }
 }
 
-def generate_benchmark_embeddings(output_file: str = "serverRouter/smartRouter/benchmark_embeddings.pkl"):
+def generate_benchmark_embeddings(output_file: str = "serverRouter/smartRouter/benchmark_embeddings.pkl", api_key: str | None = None):
     """Generate and save vector embeddings for all benchmark descriptions."""
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model = OpenAIEmbeddings(api_key=api_key)
     
     # Create combined descriptions for each benchmark
     benchmark_texts = {}
@@ -80,5 +80,6 @@ def generate_benchmark_embeddings(output_file: str = "serverRouter/smartRouter/b
     return embeddings
 
 if __name__ == "__main__":
+    # You can set your API key here or use environment variable OPENAI_API_KEY
     generate_benchmark_embeddings()
 

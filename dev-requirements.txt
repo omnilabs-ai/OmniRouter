@@ -10,6 +10,7 @@ certifi==2025.1.31
 charset-normalizer==3.4.1
 click==8.1.8
 colorama==0.4.6
+coverage==7.6.12
 distro==1.9.0
 eval_type_backport==0.2.2
 fastapi==0.115.8
@@ -68,6 +69,7 @@ pydantic_core==2.27.2
 Pygments==2.19.1
 pyparsing==3.2.1
 pytest==8.3.4
+pytest-cov==6.0.0
 python-dotenv==1.0.1
 PyYAML==6.0.2
 regex==2024.11.6

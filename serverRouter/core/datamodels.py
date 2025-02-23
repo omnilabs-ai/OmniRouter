@@ -9,6 +9,7 @@ class ModelProvider(str, Enum):
     ANTHROPIC = "anthropic"
     GEMINI = "gemini"
     DEEPSEEK = "deepseek"
+    TOGETHER = "together"
 
 ## Chat Completion Models
 class ChatMessage(BaseModel):

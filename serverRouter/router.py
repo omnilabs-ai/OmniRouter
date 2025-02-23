@@ -13,6 +13,7 @@ from serverRouter.providers.anthropic.provider import AnthropicProvider
 from serverRouter.providers.openai.provider import OpenAIProvider
 from serverRouter.providers.gemini.provider import GeminiProvider  # Make sure the path is correct
 from serverRouter.providers.deepseek.provider import DeepSeekProvider
+from serverRouter.providers.together.provider import TogetherAIProvider
 from serverRouter.core.models import (
     MODELS,
     CHAT_MODELS,
@@ -44,7 +45,8 @@ def initialize_providers():
             ModelProvider.OPENAI: OpenAIProvider(),
             ModelProvider.ANTHROPIC: AnthropicProvider(),
             ModelProvider.GEMINI: GeminiProvider(), # modified to be variable
-            ModelProvider.DEEPSEEK: DeepSeekProvider()
+            ModelProvider.DEEPSEEK: DeepSeekProvider(),
+            ModelProvider.TOGETHER: TogetherAIProvider()
         }
     except Exception as e:
         raise  # Re-raise to prevent the server from starting

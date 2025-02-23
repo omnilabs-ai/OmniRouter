@@ -221,7 +221,32 @@ CHAT_MODELS = {
         },
         tokenCost=0.00525,  # Using Gemini 1.5 Pro pricing as reference
         latency=1.5  # Estimated based on large context and multimodal processing
-    )
+    ),
+    "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": ModelInfo(
+        name="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        provider=ModelProvider.TOGETHER,
+        description="Meta Llama 3.1 8B Instruct Turbo from Together AI",
+        max_tokens=4096
+    ),
+    "Qwen/Qwen2-VL-72B-Instruct": ModelInfo(
+        name="Qwen/Qwen2-VL-72B-Instruct",
+        provider=ModelProvider.TOGETHER,
+        description="Qwen2-VL (72B) Instruct from Together AI",
+        max_tokens=4096
+    ),
+    "mistralai/Mistral-7B-Instruct-v0.2": ModelInfo(
+        name="mistralai/Mistral-7B-Instruct-v0.2",
+        provider=ModelProvider.TOGETHER,
+        description="Mistral (7B) Instruct v0.2 from Together AI",
+        max_tokens=4096
+    ),
+    "microsoft/WizardLM-2-8x22B": ModelInfo(
+        name="microsoft/WizardLM-2-8x22B",
+        provider=ModelProvider.TOGETHER,
+        description="WizardLM-2 (8x22B) from Together AI",
+        max_tokens=4096
+    ),
+    # ...we need to add additional Together models as needed
 }
 
 # Primary image models registry

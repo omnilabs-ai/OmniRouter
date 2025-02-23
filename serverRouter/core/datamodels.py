@@ -103,9 +103,9 @@ class ModelInfo(BaseModel):
 
 class SmartRouterRequest(BaseModel):
     """Input parameters for smart router model selection"""
-    query: str = Field(
+    messages: List[ChatMessage] = Field(
         ..., 
-        description="The query text to analyze for model selection"
+        description="The chat messages to analyze for model selection"
     )
     k: int = Field(
         default=5, 

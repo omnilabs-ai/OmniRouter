@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Security, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.middleware.cors import CORSMiddleware
 from serverRouter.core.datamodels import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -20,6 +21,16 @@ from serverRouter.core.models import (
 from serverRouter.smartRouter.SmartRouter import SmartRouter
 
 app = FastAPI(title="OmniLLM", description="One Key, One API, Hundreds of Models")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 security = HTTPBearer()
 
 # Provider instances cache
@@ -47,7 +58,7 @@ except Exception:
     sys.exit(1)  # Exit if provider initialization fails
 
 # Initialize SmartRouter
-smart_router = SmartRouter(verbose=True)
+smart_router = SmartRouter()
 
 VALID_API_KEYS = {
     "test-sk1o83e",
@@ -155,19 +166,13 @@ async def create_image(
             )
         request.model = model_info.name
 
+
         # Get the provider for this model
         provider = PROVIDERS.get(model_info.provider)
         if not provider:
             raise HTTPException(
                 status_code=500,
                 detail=f"Provider not configured: {model_info.provider}"
-            )
-        
-        #Google Check if we have the project ID
-        if model_info.provider == ModelProvider.GEMINI and (request.google_cloud_project_id is None or request.google_cloud_location is None):
-            raise HTTPException(
-                status_code=400,
-                detail="Google Cloud Project ID and Location are required for Gemini models"
             )
 
         response = await provider.generate_image(request)
@@ -187,20 +192,24 @@ async def select_model(
     """
     try:
         result = smart_router.get_top_user_models(
-            query=request.query,
-            k=request.k,
-            model_names=request.model_names,
-            rel_cost=request.rel_cost,
-            rel_latency=request.rel_latency,
-            rel_accuracy=request.rel_accuracy
+            query=request.messages[-1].content,  # last message is the query
+            k=request.k,  # defaults to 5 if not provided
+            model_names=request.model_names,  # defaults to None if not provided
+            rel_cost=request.rel_cost,  # defaults to 0.5 if not provided
+            rel_latency=request.rel_latency,  # defaults to 0.0 if not provided
+            rel_accuracy=request.rel_accuracy  # defaults to 0.5 if not provided
         )
-        
-        if request.verbose:
-            return {
-                "selected_model": result["model"],
-                "explanation": result["explanation"]
-            }
-        return {"selected_model": result}
+        # return result
+
+        response = await create_chat_completion(
+            request=ChatCompletionRequest(
+                model=result["model"],
+                messages=request.messages,
+            )
+        )
+
+        return response
+    
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

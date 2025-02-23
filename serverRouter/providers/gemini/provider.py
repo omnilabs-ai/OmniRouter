@@ -23,7 +23,8 @@ class GeminiProvider(ChatProvider):
         try:
             messages = []
             for msg in request.messages:
-                messages.append({"role": msg.role, "parts": [msg.content]})
+                role = "model" if msg.role == "assistant" else msg.role
+                messages.append({"role": role, "parts": [msg.content]})
 
             model = genai.GenerativeModel(model_name=request.model)
 

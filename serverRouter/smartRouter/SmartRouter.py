@@ -52,10 +52,10 @@ class RouterDecision:
         return "\n".join(output)
 
 class SmartRouter:
-    def __init__(self, embeddings_file: str = "serverRouter/smartRouter/benchmark_embeddings.pkl", verbose: bool = False, api_key: str | None = None) -> None:
+    def __init__(self, embeddings_file: str = "serverRouter/smartRouter/benchmark_embeddings.pkl", api_key: str | None = None) -> None:
         self.model = OpenAIEmbeddings(api_key=api_key)
         self.benchmark_embeddings: Dict[str, np.ndarray] = {}
-        self.verbose = verbose
+        self.verbose = True
         
         if os.path.exists(embeddings_file):
             with open(embeddings_file, 'rb') as f:
@@ -179,9 +179,7 @@ class SmartRouter:
             chosen_model=chosen_model
         )
         
-        if self.verbose:
-            return chosen_model, decision
-        return chosen_model
+        return chosen_model, decision
 
     def get_top_user_models(
         self, 
@@ -210,12 +208,9 @@ class SmartRouter:
             'latency': rel_latency
         }
         
-        result = self._calculate_model_metrics(best_models, metric_weights)
+        chosen_model, decision = self._calculate_model_metrics(best_models, metric_weights)
         
-        if self.verbose:
-            chosen_model, decision = result
-            return {
-                'model': chosen_model,
-                'explanation': decision.format_verbose_output()
-            }
-        return result
+        return {
+            'model': chosen_model,
+            'explanation': decision.format_verbose_output()
+        }

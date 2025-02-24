@@ -17,25 +17,11 @@ class TestSmartRouter(BaseTest):
         poetry_messages = [
             {
                 "role": "user",
-                "content": "What is the derivative of x^2 + 3x - 4"
-            },
-            {
-                "role": "assistant",
-                "content": "The derivative of x^2 + 3x - 4 is 2x + 3.\n\nHere's how to find it using the power rule and the sum/difference rule of differentiation:\n\n*   **Power Rule:** The derivative of x^n is n * x^(n-1)\n\n*   **Sum/Difference Rule:** The derivative of a sum or difference of terms is the sum or difference of the derivatives of each term.\n\n1.  **Derivative of x^2:** Applying the power rule, the derivative of x^2 is 2 * x^(2-1) = 2x.\n2.  **Derivative of 3x:**  This can be thought of as 3 * x^1. Applying the power rule and the constant multiple rule (the derivative of c*f(x) is c*f'(x)), the derivative is 3 * 1 * x^(1-1) = 3 * x^0 = 3 * 1 = 3.\n3.  **Derivative of -4:** The derivative of a constant is always 0.\n\n4.  **Combine:** Using the sum/difference rule, the derivative of x^2 + 3x - 4 is 2x + 3 - 0 = 2x + 3.\n\nTherefore, the derivative is **2x + 3**.\n"
-            },
-            {
-                "role": "user",
-                "content": "What is the derivative of x^2 + 3x - 4\n"
+                "content": """Write a beautiful poem about the sunset over the ocean,
+                using vivid imagery and metaphors to capture the colors
+                and emotions of the scene."""
             }
-        ]       
-        # [
-        #     {
-        #         "role": "user",
-        #         "content": """Write a beautiful poem about the sunset over the ocean,
-        #         using vivid imagery and metaphors to capture the colors
-        #         and emotions of the scene."""
-        #     }
-        # ]
+        ]
         
         # Get routing decisions for both prompts using the API endpoint
         math_response = self.client.post(

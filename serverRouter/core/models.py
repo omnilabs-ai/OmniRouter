@@ -162,26 +162,6 @@ CHAT_MODELS = {
         tokenCost=0.00137,  # Average of input ($0.00055) and output ($0.00219) costs
         latency=3.5  # Estimated based on additional reasoning overhead
     ),
-    "gemini-2.0-flash-lite": ModelInfo(
-        name="gemini-2.0-flash-lite-preview-02-05",
-        provider=ModelProvider.GEMINI,
-        description=(
-            "Gemini 2.0 Flash Lite is a lightweight, high-speed variant optimized for low latency. "
-            "Strengths: Fast response and efficient for general queries. "
-            "Weaknesses: May provide less detailed responses than Gemini Pro."
-        ),
-        max_tokens=1048576,  # 1M tokens
-        benchmarks={
-            "MMLU": 0.800,
-            "GPQA": 0.580,
-            "HumanEval": 0.900,
-            "MATH": 0.890,
-            "BFCL": 0.870,
-            "MGSM": 0.880
-        },
-        tokenCost=0.00026,  # Average of input ($0.00013) and output ($0.00038) costs
-        latency=0.3  # ~185 tokens/sec
-    ),
     "gemini-2.0-pro": ModelInfo(
         name="gemini-2.0-pro-exp-02-05",
         provider=ModelProvider.GEMINI,
@@ -222,6 +202,7 @@ CHAT_MODELS = {
         tokenCost=0.00525,  # Using Gemini 1.5 Pro pricing as reference
         latency=1.5  # Estimated based on large context and multimodal processing
     ),
+    # Note: Together AI models are having issues with the API.
     "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": ModelInfo(
         name="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
         provider=ModelProvider.TOGETHER,

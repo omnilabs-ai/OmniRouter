@@ -1,7 +1,7 @@
 from .test_core import BaseTest
 from typing import Optional
 
-# python -m testLib.test_user deepseek-v3
+# python -m testLib.test_user meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
 
 class TestSingleModel(BaseTest):
     def test_specific_model(self, model_name: Optional[str] = None):

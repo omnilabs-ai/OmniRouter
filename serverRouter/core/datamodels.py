@@ -10,6 +10,7 @@ class ModelProvider(str, Enum):
     GEMINI = "gemini"
     DEEPSEEK = "deepseek"
     TOGETHER = "together"
+    STABLEDIFFUSION = "stablediffusion"
 
 ## Chat Completion Models
 class ChatMessage(BaseModel):

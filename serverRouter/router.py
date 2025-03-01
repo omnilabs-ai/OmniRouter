@@ -6,6 +6,7 @@ from serverRouter.providers.openai.provider import OpenAIProvider
 from serverRouter.providers.gemini.provider import GeminiProvider
 from serverRouter.providers.deepseek.provider import DeepSeekProvider
 from serverRouter.providers.together.provider import TogetherAIProvider
+from serverRouter.providers.stablediffusion.provider import StableDiffusionProvider
 from serverRouter.routes import model_routes, completion_routes
 from serverRouter.core.config import PROVIDERS
 
@@ -31,10 +32,12 @@ def initialize_providers():
             ModelProvider.ANTHROPIC: AnthropicProvider(),
             ModelProvider.GEMINI: GeminiProvider(),
             ModelProvider.DEEPSEEK: DeepSeekProvider(),
-            ModelProvider.TOGETHER: TogetherAIProvider()
+            ModelProvider.TOGETHER: TogetherAIProvider(),
+            ModelProvider.STABLEDIFFUSION: StableDiffusionProvider()
         })
     except Exception as e:
         raise
+
 
 # Initialize providers during startup
 try:

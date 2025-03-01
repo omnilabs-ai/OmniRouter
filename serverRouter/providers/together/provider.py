@@ -1,14 +1,19 @@
-# serverRouter/providers/togetherai/provider.py
+# serverRouter/providers/together/provider.py
 import os
 import asyncio
-from serverRouter.core.interfaces import ChatProvider
-from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionResponse
+from serverRouter.core.interfaces import ChatProvider, ImageProvider
+from serverRouter.core.datamodels import (
+    ChatCompletionRequest, 
+    ChatCompletionResponse,
+    ImageGenerationRequest,
+    ImageGenerationResponse
+)
 from serverRouter.core.exceptions import ProviderError
 
-class TogetherAIProvider(ChatProvider):
+class TogetherAIProvider(ChatProvider, ImageProvider):
     """
     Provider for Together AI.
-    Uses the official Together library to call chat completions.
+    Uses the official Together library to call chat completions and generate images.
     """
 
     def __init__(self, api_key: str = None):
@@ -50,3 +55,48 @@ class TogetherAIProvider(ChatProvider):
             )
         except Exception as e:
             raise ProviderError(f"Together AI API error: {str(e)}")
+
+    async def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
+        """
+        Call Together AI's image generation endpoint.
+        Since the Together API is synchronous, we run it in a thread to avoid blocking.
+        """
+        try:
+            # Parse size to get width and height
+            if request.size.value == "1024x1024":
+                width, height = 1024, 1024
+            elif request.size.value == "512x512":
+                width, height = 512, 512
+            elif request.size.value == "256x256":
+                width, height = 256, 256
+            else:
+                width, height = 1024, 1024
+
+            # Custom parameter for FLUX models
+            steps = 4  # Default value for FLUX, can be adjusted if needed
+            
+            # Run the synchronous API call in a thread pool to avoid blocking
+            response = await asyncio.to_thread(
+                self.client.images.generate,
+                prompt=request.prompt,
+                model=request.model,
+                width=width,
+                height=height,
+                steps=steps,
+                n=request.n,
+                response_format="b64_json"
+            )
+            
+            # Convert b64_json responses to data URLs
+            image_urls = []
+            for image_data in response.data:
+                # Create a data URL from the base64 data
+                image_urls.append(f"data:image/png;base64,{image_data.b64_json}")
+            
+            return ImageGenerationResponse(
+                urls=image_urls,
+                model=request.model,
+                provider="together"
+            )
+        except Exception as e:
+            raise ProviderError(f"Together AI Image API error: {str(e)}")

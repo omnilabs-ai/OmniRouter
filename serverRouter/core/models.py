@@ -249,7 +249,34 @@ IMAGE_MODELS = {
             "Strengths: Fast generation and good quality for common use cases. "
             "Weaknesses: Less detailed and accurate compared to DALL-E 3."
         ),
-    )
+    ),
+    "stable-diffusion-3.5-large": ModelInfo(
+        name="stable-diffusion-3.5-large",
+        provider=ModelProvider.STABLEDIFFUSION,
+        description=(
+            "Stable Diffusion 3.5 Large is the latest version with outstanding capabilities. "
+            "Strengths: Excellent understanding of prompts, highly detailed image generation, and natural compositions. "
+            "Weaknesses: Higher computational requirements and slower generation time."
+        ),
+    ),
+    "stable-diffusion-3.5-turbo": ModelInfo(
+        name="stable-diffusion-3.5-turbo",
+        provider=ModelProvider.STABLEDIFFUSION,
+        description=(
+            "Stable Diffusion 3.5 Turbo offers faster generation with good quality. "
+            "Strengths: Quick response time and balanced quality-to-speed ratio. "
+            "Weaknesses: Slightly lower detail quality compared to the Large variant."
+        ),
+    ),
+    "black-forest-labs/FLUX.1-schnell-Free": ModelInfo(
+        name="black-forest-labs/FLUX.1-schnell-Free",
+        provider=ModelProvider.TOGETHER,
+        description=(
+            "FLUX.1-schnell is a fast and high-quality image generation model from Black Forest Labs. "
+            "Strengths: Rapid image generation with good detail and natural compositions. "
+            "Weaknesses: May not match the photorealism of larger models."
+        ),
+    ),
 }
 
 # Combined models dictionary

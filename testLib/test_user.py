@@ -41,8 +41,28 @@ class TestSingleModel(BaseTest):
         assert "description" in target_model
         assert "max_tokens" in target_model
         
-        # Test chat completion with the model
+        # Check if this is an image model
+        is_image_model = False
+        image_response = self.client.get("/v1/models/image")
+        if image_response.status_code == 200:
+            image_models = [m["id"] for m in image_response.json()["models"]]
+            is_image_model = model_name in image_models
+        
+        try:
+            if is_image_model:
+                self._test_image_model(model_name)
+            else:
+                self._test_chat_model(model_name)
+            self.logger.info("Test completed successfully!")
+        except Exception as e:
+            self.logger.error(f"Test failed: {e}")
+            assert False, f"Test failed: {e}"
+
+    def _test_chat_model(self, model_name: str):
+        """Test a chat completion model"""
         test_message = "Say hello in a friendly way"
+        self.logger.info(f"Testing chat completion with message: '{test_message}'")
+        
         chat_request = {
             "model": model_name,
             "messages": [{"role": "user", "content": test_message}],
@@ -50,21 +70,39 @@ class TestSingleModel(BaseTest):
             "max_tokens": 50
         }
         
-        self.logger.info(f"Testing chat completion with message: '{test_message}'")
+        chat_response = self.client.post("/v1/chat/completions", json=chat_request)
+        assert chat_response.status_code == 200, f"Chat completion failed for model {model_name}: {chat_response.text}"
+        
+        response_data = chat_response.json()
+        assert "content" in response_data, f"Response missing content field for model {model_name}"
+        assert len(response_data["content"]) > 0, f"Response content is empty for model {model_name}"
+        
+        self.logger.info(f"Model response: {response_data['content']}")
 
-        try:
-            chat_response = self.client.post("/v1/chat/completions", json=chat_request)
-            assert chat_response.status_code == 200, f"Chat completion failed for model {model_name}: {chat_response.text}"
-            
-            response_data = chat_response.json()
-            assert "content" in response_data, f"Response missing content field for model {model_name}"
-            assert len(response_data["content"]) > 0, f"Response content is empty for model {model_name}"
-            
-            self.logger.info(f"Model response: {response_data['content']}")
-            self.logger.info("Test completed successfully!")
-        except Exception as e:
-            self.logger.error(f"Test failed: {e}")
-            assert False, f"Test failed: {e}"
+    def _test_image_model(self, model_name: str):
+        """Test an image generation model"""
+        from serverRouter.core.datamodels import ImageSize
+        
+        test_prompt = "A serene landscape with mountains and a lake at sunset"
+        self.logger.info(f"Testing image generation with prompt: '{test_prompt}'")
+        
+        image_request = {
+            "model": model_name,
+            "prompt": test_prompt,
+            "size": ImageSize.LARGE.value,
+            "quality": "standard",
+            "n": 1
+        }
+        
+        image_response = self.client.post("/v1/images/generate", json=image_request, timeout=30)
+        assert image_response.status_code == 200, f"Image generation failed for model {model_name}: {image_response.text}"
+        
+        response_data = image_response.json()
+        assert "urls" in response_data, f"Response missing urls field for model {model_name}"
+        assert len(response_data["urls"]) > 0, f"No image URLs in response for model {model_name}"
+        assert "provider" in response_data, f"Response missing provider field for model {model_name}"
+        
+        self.logger.info(f"Generated {len(response_data['urls'])} image(s). First URL: {response_data['urls'][0]}")
 
 if __name__ == "__main__":
     # This allows running the test directly with: python -m testLibV2.test_provider

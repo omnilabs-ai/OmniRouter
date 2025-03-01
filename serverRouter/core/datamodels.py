@@ -34,7 +34,29 @@ class ChatCompletionResponse(BaseModel):
         default_factory=dict,
         description="Token usage statistics"
     )
+# Add streaming-specific data models
 
+class ChatCompletionChunk(BaseModel):
+    """A chunk of a streaming chat completion response"""
+    model: str = Field(..., description="Name of the model used")
+    content: str = Field(..., description="Generated content chunk")
+    provider: str = Field(..., description="Provider that generated the response")
+    finish_reason: Optional[str] = Field(
+        default=None, 
+        description="Reason the generation finished, if applicable"
+    )
+    
+class StreamProgress(BaseModel):
+    """Information about the progress of a streaming response"""
+    completion_tokens: int = Field(
+        default=0, 
+        description="Number of tokens generated so far"
+    )
+    is_complete: bool = Field(
+        default=False,
+        description="Whether the response is complete"
+    )
+    
 ## Image Generation Models
 class ImageSize(str, Enum):
     """Supported image sizes"""

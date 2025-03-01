@@ -104,7 +104,7 @@ def verify_models():
         except ImportError:
             try:
                 # Try relative import
-                from .core.models import CHAT_MODELS
+                from ...core.models import CHAT_MODELS
             except (ImportError, ValueError):
                 # Direct import with corrected path
                 current_dir = os.path.dirname(os.path.abspath(__file__))

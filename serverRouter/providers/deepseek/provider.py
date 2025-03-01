@@ -1,7 +1,11 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, AsyncGenerator
 from openai import AsyncOpenAI
 from serverRouter.core.interfaces import ChatProvider
-from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionResponse
+from serverRouter.core.datamodels import (
+    ChatCompletionRequest, 
+    ChatCompletionResponse,
+    ChatCompletionChunk
+)
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
 import os
@@ -84,3 +88,63 @@ class DeepSeekProvider(ChatProvider):
             
         except Exception as e:
             raise ProviderError(f"API request failed: {str(e)}")
+            
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> AsyncGenerator[ChatCompletionChunk, None]:
+        """Stream a chat completion using DeepSeek's API (which uses OpenAI's format)"""
+        try:
+            # Convert messages to API format
+            messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+            
+            # Base parameters
+            params = {
+                "model": request.model,
+                "messages": messages,
+                "max_tokens": request.max_tokens,
+                "temperature": request.temperature,
+                "stream": True
+            }
+
+            # Add tools if specified
+            if hasattr(request, "tools") and request.tools:
+                params["tools"] = request.tools
+                
+            # Add tool choice if specified
+            if hasattr(request, "tool_choice") and request.tool_choice:
+                params["tool_choice"] = request.tool_choice
+                
+            # Add response format if specified
+            if hasattr(request, "response_format") and request.response_format:
+                params["response_format"] = request.response_format
+            
+            # Create the streaming completion
+            stream = await self.client.chat.completions.create(**params)
+            
+            # Stream the chunks
+            async for chunk in stream:
+                if not chunk.choices:
+                    continue
+                    
+                choice = chunk.choices[0]
+                
+                if not choice.delta or not choice.delta.content:
+                    if choice.finish_reason:
+                        # Final chunk without content, just the finish reason
+                        yield ChatCompletionChunk(
+                            model=chunk.model,
+                            content="",
+                            provider="deepseek",
+                            finish_reason=choice.finish_reason
+                        )
+                    continue
+                
+                # Yield the chunk
+                yield ChatCompletionChunk(
+                    model=chunk.model,
+                    content=choice.delta.content,
+                    provider="deepseek",
+                    finish_reason=choice.finish_reason
+                )
+                
+        except Exception as e:
+            logging.exception("DeepSeek streaming error")
+            raise ProviderError(f"DeepSeek streaming API error: {str(e)}")

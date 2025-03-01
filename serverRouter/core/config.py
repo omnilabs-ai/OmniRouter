@@ -1,5 +1,5 @@
 """Shared configuration constants for the OmniLLM API."""
-from serverRouter.smartRouter.SmartRouter import SmartRouter
+from serverRouter.smartRouter.smart_router import SmartRouter
 
 VALID_API_KEYS = {
     "test-sk1o83e",

@@ -1,15 +1,17 @@
-from typing import Dict, Any
+from typing import Dict, Any, AsyncGenerator
 from openai import AsyncOpenAI
 import os
 from serverRouter.core.interfaces import ChatProvider, ImageProvider
 from serverRouter.core.datamodels import (
     ChatCompletionRequest, 
     ChatCompletionResponse,
+     ChatCompletionChunk,
     ImageGenerationRequest,
     ImageGenerationResponse
 )
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
+import logging
 load_dotenv()
 
 class OpenAIProvider(ChatProvider, ImageProvider):
@@ -50,6 +52,50 @@ class OpenAIProvider(ChatProvider, ImageProvider):
             )
         except Exception as e:
             raise ProviderError(f"OpenAI API error: {str(e)}")
+        
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> AsyncGenerator[ChatCompletionChunk, None]:
+        """Stream a chat completion using OpenAI's API"""
+        try:
+            # Convert messages to API format
+            messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+            
+            # Create the streaming completion
+            stream = await self.client.chat.completions.create(
+                model=request.model,
+                messages=messages,
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+                stream=True
+            )
+            
+            # Stream the chunks
+            async for chunk in stream:
+                if not chunk.choices:
+                    continue
+                    
+                choice = chunk.choices[0]
+                
+                if not choice.delta or not choice.delta.content:
+                    if choice.finish_reason:
+                        # Final chunk without content, just the finish reason
+                        yield ChatCompletionChunk(
+                            model=chunk.model,
+                            content="",
+                            provider="openai",
+                            finish_reason=choice.finish_reason
+                        )
+                    continue
+                
+                # Yield the chunk
+                yield ChatCompletionChunk(
+                    model=chunk.model,
+                    content=choice.delta.content,
+                    provider="openai",
+                    finish_reason=choice.finish_reason
+                )
+                
+        except Exception as e:
+            raise ProviderError(f"OpenAI streaming API error: {str(e)}")
 
     async def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
         try:

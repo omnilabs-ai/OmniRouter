@@ -1,5 +1,12 @@
 from abc import ABC, abstractmethod
-from .datamodels import ChatCompletionRequest, ChatCompletionResponse, ImageGenerationRequest, ImageGenerationResponse
+from typing import AsyncGenerator  # This import is missing
+from .datamodels import (
+    ChatCompletionRequest, 
+    ChatCompletionResponse, 
+    ChatCompletionChunk, 
+    ImageGenerationRequest, 
+    ImageGenerationResponse
+)
 
 class ChatProvider(ABC):
     """Abstract base class for chat completion providers"""
@@ -10,6 +17,28 @@ class ChatProvider(ABC):
         Generate a chat completion response for the given request
         """
         pass
+    
+    @abstractmethod
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> AsyncGenerator[ChatCompletionChunk, None]:
+        """
+        Stream a chat completion response for the given request
+        
+        Args:
+            request: ChatCompletionRequest containing the input parameters
+            
+        Returns:
+            AsyncGenerator yielding ChatCompletionChunk objects
+        """
+        pass
+    
+    async def supports_streaming(self) -> bool:
+        """
+        Check if this provider supports streaming
+        
+        Returns:
+            bool: True if streaming is supported, False otherwise
+        """
+        return True
 
 class ImageProvider(ABC):
     """Abstract base class for image generation providers"""
@@ -20,8 +49,3 @@ class ImageProvider(ABC):
         Generate an image based on the given request
         """
         pass
-
-
-
-
-

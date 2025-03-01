@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniRouter Streaming Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .config-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        input, select, textarea, button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #4a90e2;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        
+        .chat-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            background-color: white;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 6px;
+        }
+        
+        .user-message {
+            background-color: #e6f2ff;
+            margin-left: 20px;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .assistant-message {
+            background-color: #f5f5f5;
+            margin-right: 20px;
+            border-left: 4px solid #55bb55;
+        }
+        
+        .token-counter {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>OmniRouter Streaming Test</h1>
+    
+    <div class="config-panel">
+        <div class="form-group">
+            <label for="api-url">API URL:</label>
+            <input type="text" id="api-url" value="http://localhost:8000/v1/chat/completions">
+        </div>
+        
+        <div class="form-group">
+            <label for="api-key">API Key:</label>
+            <input type="text" id="api-key" value="test-sk1o83e">
+        </div>
+        
+        <div class="form-group">
+            <label for="model-select">Model:</label>
+            <select id="model-select">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (OpenAI)</option>
+                <option value="gpt-4">GPT-4 (OpenAI)</option>
+                <option value="claude-3-opus">Claude 3 Opus (Anthropic)</option>
+                <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (Anthropic)</option>
+                <option value="gemini-2.0-pro">Gemini 2.0 Pro (Google)</option>
+                <option value="deepseek-v3">DeepSeek V3 (DeepSeek)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="temperature">Temperature:</label>
+            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+            <span id="temperature-value">0.7</span>
+        </div>
+    </div>
+    
+    <div class="chat-container" id="chat-container"></div>
+    
+    <div class="form-group">
+        <label for="prompt">Your message:</label>
+        <textarea id="prompt" placeholder="Type your message here..."></textarea>
+        <button id="send-button">Send</button>
+    </div>
+    
+    <div class="status" id="status"></div>
+    
+    <script>
+        // DOM elements
+        const apiUrlInput = document.getElementById('api-url');
+        const apiKeyInput = document.getElementById('api-key');
+        const modelSelect = document.getElementById('model-select');
+        const temperatureSlider = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperature-value');
+        const promptInput = document.getElementById('prompt');
+        const sendButton = document.getElementById('send-button');
+        const chatContainer = document.getElementById('chat-container');
+        const statusDisplay = document.getElementById('status');
+        
+        // Event listeners
+        temperatureSlider.addEventListener('input', () => {
+            temperatureValue.textContent = temperatureSlider.value;
+        });
+        
+        sendButton.addEventListener('click', sendMessage);
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Track current stream
+        let currentEventSource = null;
+        
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            messageDiv.innerHTML = content;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+            
+            // Add user message to chat
+            addMessage('user', prompt);
+            
+            // Create assistant message container for streaming
+            const assistantMessageDiv = document.createElement('div');
+            assistantMessageDiv.className = 'message assistant-message';
+            chatContainer.appendChild(assistantMessageDiv);
+            
+            // Disable inputs during streaming
+            sendButton.disabled = true;
+            promptInput.disabled = true;
+            statusDisplay.textContent = "Waiting for response...";
+            
+            // Clear the prompt
+            promptInput.value = '';
+            
+            // Cancel any existing streams
+            if (currentEventSource) {
+                currentEventSource.close();
+            }
+            
+            const apiUrl = apiUrlInput.value;
+            const apiKey = apiKeyInput.value;
+            const model = modelSelect.value;
+            const temperature = parseFloat(temperatureSlider.value);
+            
+            // Prepare the request payload
+            const payload = {
+                model: model,
+                messages: [{ role: "user", content: prompt }],
+                stream: true,
+                temperature: temperature
+            };
+            
+            // Use Fetch API with ReadableStream for streaming
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(payload)
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                
+                function processStream() {
+                    return reader.read().then(({ value, done }) => {
+                        if (done) {
+                            statusDisplay.textContent = "Response complete.";
+                            sendButton.disabled = false;
+                            promptInput.disabled = false;
+                            return;
+                        }
+                        
+                        // Decode the chunk and add it to the buffer
+                        buffer += decoder.decode(value, { stream: true });
+                        
+                        // Process each complete SSE message
+                        while (buffer.includes('\n\n')) {
+                            const messageEnd = buffer.indexOf('\n\n');
+                            const message = buffer.slice(0, messageEnd);
+                            buffer = buffer.slice(messageEnd + 2);
+                            
+                            if (message.startsWith('data: ')) {
+                                const data = message.slice(6);
+                                
+                                if (data === '[DONE]') {
+                                    // Stream complete
+                                    statusDisplay.textContent = "Response complete.";
+                                    sendButton.disabled = false;
+                                    promptInput.disabled = false;
+                                } else {
+                                    try {
+                                        const chunk = JSON.parse(data);
+                                        
+                                        if (chunk.error) {
+                                            assistantMessageDiv.innerHTML += `<span style="color: red;">Error: ${chunk.error.message}</span>`;
+                                            statusDisplay.textContent = `Error: ${chunk.error.message}`;
+                                            sendButton.disabled = false;
+                                            promptInput.disabled = false;
+                                        } else {
+                                            // Append the content chunk to the assistant message
+                                            assistantMessageDiv.innerHTML += chunk.content;
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                        }
+                                    } catch (error) {
+                                        console.error('Error parsing JSON:', error, data);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Continue reading the stream
+                        return processStream();
+                    }).catch(error => {
+                        assistantMessageDiv.innerHTML += `<span style="color: red;">Stream error: ${error.message}</span>`;
+                        statusDisplay.textContent = `Stream error: ${error.message}`;
+                        sendButton.disabled = false;
+                        promptInput.disabled = false;
+                    });
+                }
+                
+                return processStream();
+            }).catch(error => {
+                assistantMessageDiv.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+                statusDisplay.textContent = `Error: ${error.message}`;
+                sendButton.disabled = false;
+                promptInput.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>

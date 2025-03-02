@@ -86,9 +86,10 @@ class TestImageModels(BaseTest):
         assert len(response_data["urls"]) > 0, f"No image URLs returned for model {model_id}"
         assert response_data["provider"] == model["provider"], f"Provider mismatch for model {model_id}"
         
-        # Verify each URL is accessible - allow both HTTP URLs and data URLs
+        # Verify each URL is a data URL (base64), not an HTTP URL
         for url in response_data["urls"]:
             assert isinstance(url, str), f"URL is not a string in response for model {model_id}"
-            assert url.startswith("http") or url.startswith("data:"), f"Invalid URL format in response for model {model_id}: {url}"
+            assert not url.startswith("http"), f"HTTP URL found instead of base64 data for model {model_id}"
+            assert url.startswith("data:"), f"Invalid URL format - expected data URL for model {model_id}: {url}"
         
-        self.logger.debug(f"Validated image response for {model_id}: {response_data}")
+        self.logger.debug(f"Validated image response for {model_id}: base64 data URLs")

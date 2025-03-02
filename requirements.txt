@@ -61,5 +61,4 @@ uvicorn==0.34.0
 websockets==14.2
 yarl==1.18.3
 numpy==1.26.1
-jinja2==3.1.2
 python-multipart==0.0.6

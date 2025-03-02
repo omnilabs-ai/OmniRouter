@@ -58,11 +58,17 @@ class OpenAIProvider(ChatProvider, ImageProvider):
                 prompt=request.prompt,
                 size=request.size.value,
                 quality=request.quality,
-                n=request.n
+                n=request.n,
+                response_format="b64_json"
             )
             
+            data_urls = [
+                f"data:image/png;base64,{image.b64_json}" 
+                for image in response.data
+            ]
+            
             return ImageGenerationResponse(
-                urls=[image.url for image in response.data],
+                urls=data_urls,
                 model=request.model,
                 provider="openai"
             )

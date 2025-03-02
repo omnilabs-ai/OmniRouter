@@ -11,3 +11,6 @@ test_sd_server.py
 test_together_server.py
 serverRouter/providers/stablediffusion/sample.py
 serverRouter/providers/together/sample.py
+
+.DS_Store
+serverRouter/DS_Store

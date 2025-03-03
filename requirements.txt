@@ -61,3 +61,7 @@ uvicorn==0.34.0
 websockets==14.2
 yarl==1.18.3
 numpy==1.26.1
+langchain==0.0.309
+sse-starlette
+browser-use
+langchain-google-genai

@@ -1,8 +1,48 @@
-venv/
-__pycache__/
-*.pyc
+# Create or edit your .gitignore file
+cat > .gitignore << 'EOF'
+# Environment variables
 .env
+.env.*
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+**/venv/
+**/.venv/
+
+# Agent files (as requested)
+serverRouter/omniAgents/
+serverRouter/test_agents.py
+serverRouter/test_browser_use_adapter.py
+serverRouter/test_browser_use_adapter_simple.py
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+**/__pycache__/
+
+# IDE configs
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
 *.log
-.vercel
+
+# Compiled files
+*.so
+*.dylib
+*.dll
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+EOF

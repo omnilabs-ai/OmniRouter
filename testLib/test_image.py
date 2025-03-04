@@ -61,7 +61,7 @@ class TestImageModels(BaseTest):
                 timeout=30  # Image generation might take longer than chat
             )
             
-            self.logger.debug(f"Image generation response for {model_id} (status {image_response.status_code}): {image_response.text}")
+            self.logger.debug(f"Image generation response for {model_id} (status {image_response.status_code})")#: {image_response.text}
             
             response_data = image_response.json()
             

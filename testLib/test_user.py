@@ -1,5 +1,9 @@
 from .test_core import BaseTest
 from typing import Optional
+import os
+import base64
+from datetime import datetime
+from pathlib import Path
 
 # python -m testLib.test_user meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
 
@@ -102,12 +106,31 @@ class TestSingleModel(BaseTest):
         assert len(response_data["urls"]) > 0, f"No image URLs in response for model {model_name}"
         assert "provider" in response_data, f"Response missing provider field for model {model_name}"
         
-        # Verify URLs are base64 data URLs, not HTTP URLs
-        for url in response_data["urls"]:
+        # Create logs directory if it doesn't exist
+        logs_dir = Path("testLib\\logs")
+        logs_dir.mkdir(exist_ok=True)
+        
+        # Save images
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        saved_paths = []
+        
+        for idx, url in enumerate(response_data["urls"]):
             assert not url.startswith("http"), f"HTTP URL found instead of base64 data for model {model_name}"
             assert url.startswith("data:"), f"Invalid URL format - expected data URL for model {model_name}"
+            
+            # Extract the image data and format
+            header, encoded = url.split(",", 1)
+            image_format = header.split(";")[0].split("/")[1]
+            
+            # Decode and save the image
+            image_data = base64.b64decode(encoded)
+            image_path = logs_dir / f"{model_name}_{timestamp}_{idx}.{image_format}"
+            with open(image_path, "wb") as f:
+                f.write(image_data)
+            saved_paths.append(image_path)
+            self.logger.info(f"Saved image to: {image_path}")
         
-        self.logger.info(f"Generated {len(response_data['urls'])} image(s). First URL type: data URL")
+        self.logger.info(f"Generated and saved {len(saved_paths)} image(s) to logs directory")
 
 if __name__ == "__main__":
     # This allows running the test directly with: python -m testLibV2.test_provider

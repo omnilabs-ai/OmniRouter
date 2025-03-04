@@ -15,7 +15,7 @@ Run: `python -m pytest testLib/test_chat_model.py -v`
 
 # To test image models
 
-Run: `python -m pytest testLib/test_image_model.py -v`
+Run: `python -m pytest testLib/test_image.py -v`
 
 # To test a single model
 

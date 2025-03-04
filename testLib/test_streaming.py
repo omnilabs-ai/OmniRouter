@@ -61,7 +61,7 @@ class TestStreaming(BaseTest):
         assert payload["stream"] is True
         
         test_logger.info("Streaming request structure is valid")
-    
+    #why is this in the test_streaming file?
     def test_non_streaming_endpoint(self):
         """Test the non-streaming version of the chat completions endpoint."""
         test_logger.info("Testing non-streaming chat completion")
@@ -93,6 +93,7 @@ class TestStreaming(BaseTest):
         
         test_logger.info("Non-streaming endpoint works correctly")
     
+    #what is this and why it is doing
     @pytest.mark.asyncio
     async def test_streaming_response_handling(self, api_key, api_url):
         """Test parsing and handling streaming responses."""
@@ -126,6 +127,7 @@ class TestStreaming(BaseTest):
     
     @pytest.mark.asyncio
     @pytest.mark.integration
+    
     async def test_streaming_integration(self, api_key, api_url):
         """
         Integration test for the streaming API.

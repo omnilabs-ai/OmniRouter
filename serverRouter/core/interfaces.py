@@ -30,15 +30,6 @@ class ChatProvider(ABC):
             AsyncGenerator yielding ChatCompletionChunk objects
         """
         pass
-    
-    async def supports_streaming(self) -> bool:
-        """
-        Check if this provider supports streaming
-        
-        Returns:
-            bool: True if streaming is supported, False otherwise
-        """
-        return True
 
 class ImageProvider(ABC):
     """Abstract base class for image generation providers"""

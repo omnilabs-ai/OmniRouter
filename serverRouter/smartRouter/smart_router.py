@@ -453,3 +453,66 @@ class SmartRouter:
             similarities = {k: v/total for k, v in similarities.items()}
             
         return similarities
+    def get_top_user_models(self, query: str, k: int = 5, model_names=None, 
+                       rel_cost: float = 0.5, rel_latency: float = 0.0, 
+                       rel_accuracy: float = 0.5) -> dict:
+        """
+        Get the top models for a user query based on the query content and user preferences.
+        
+        Args:
+            query: The user query text
+            k: Number of top models to return (default 5)
+            model_names: Optional list of model names to consider, if None uses all models
+            rel_cost: Relative importance of cost (0-1)
+            rel_latency: Relative importance of latency (0-1)
+            rel_accuracy: Relative importance of accuracy (0-1)
+            
+        Returns:
+            Dictionary with the selected model and details
+        """
+        # Create a dummy message for the task identification
+        messages = [ChatMessage(role="user", content=query)]
+
+
+        # Identify the type of tasks in the query
+        task_scores = self.identify_tasks(messages)
+        
+        # Compute weights for relevant benchmarks
+        benchmark_weights = self.compute_benchmark_weights(task_scores)
+        
+        # Score all models based on weighted benchmarks and user preferences
+        model_scores = self.score_models(
+            benchmark_weights, 
+            rel_cost=rel_cost,
+            rel_latency=rel_latency,
+            rel_accuracy=rel_accuracy,
+            model_names=model_names
+        )
+        
+        # Sort models by score
+        sorted_models = sorted(
+            [(name, data) for name, data in model_scores.items()],
+            key=lambda x: x[1]["score"],
+            reverse=True
+        )
+        
+        # Get top K models
+        top_models = sorted_models[:k] if sorted_models else []
+        
+        # Return the top model with some details (can be expanded as needed)
+        if top_models:
+            top_model, top_model_data = top_models[0]
+            return {
+                "model": top_model,
+                "model_details": top_model_data,
+                "identified_tasks": task_scores,
+                "benchmark_weights": benchmark_weights
+            }
+        else:
+            # Fallback to a default model if no models found
+            return {
+                "model": "gpt-3.5-turbo",  # Default model as fallback
+                "model_details": {},
+                "identified_tasks": task_scores,
+                "benchmark_weights": benchmark_weights
+            }

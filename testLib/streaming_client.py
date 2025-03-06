@@ -1,41 +1,22 @@
 """
-Streaming Client for testing the streaming API functionality.
+StreamingTest for testing the streaming API functionality.
 This module provides utilities to test the streaming capabilities
-of the OmniRouter API.
+of the OmniRouter API using the BaseTest framework.
 """
 
-import asyncio
-import aiohttp
+import time
 import json
 import sys
-import os
-import time
 from datetime import datetime
-from typing import Dict, Any, Optional, List
-from pathlib import Path
+from typing import Dict, Any, List
 
-# Add parent directory to path to allow imports
-parent_dir = Path(__file__).parent.parent
-sys.path.append(str(parent_dir))
+from .test_core import BaseTest
+from .test_utils import test_logger
 
-# Initialize logger
-from testLib.test_utils import test_logger
-
-class StreamingClient:
-    """Client for testing the OmniRouter streaming API."""
+class StreamingTest(BaseTest):
+    """Test class for the OmniRouter streaming API extending BaseTest."""
     
-    def __init__(self, api_key: str = "test-sk1o83e", api_url: str = "http://localhost:8000/v1/chat/completions"):
-        """
-        Initialize the streaming client.
-        
-        Args:
-            api_key: API key for authentication
-            api_url: URL for the streaming API endpoint
-        """
-        self.api_key = api_key
-        self.api_url = api_url
-    
-    async def test_streaming(self, model: str, prompt: str, verbose: bool = False) -> Dict[str, Any]:
+    def test_streaming(self, model: str, prompt: str, verbose: bool = False) -> Dict[str, Any]:
         """
         Test streaming from the OmniRouter API.
         
@@ -60,11 +41,6 @@ class StreamingClient:
             "temperature": 0.7
         }
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
         start_time = datetime.now()
         complete_content = ""
         result = {
@@ -79,87 +55,88 @@ class StreamingClient:
         }
         
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    self.api_url,
-                    json=payload,
-                    headers=headers
-                ) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        test_logger.error(f"Error: {response.status} - {error_text}")
-                        result["error"] = f"HTTP {response.status}: {error_text}"
-                        return result
-                    
-                    # Process the streaming response
-                    first_token_received = False
-                    first_token_time = None
-                    chunk = None
-                    
-                    async for line in response.content:
-                        line = line.decode('utf-8')
-                        if verbose:
-                            test_logger.debug(f"Raw data: {line}")
+            # Using the client from BaseTest - note that the TestClient doesn't truly stream
+            # This implementation processes the response as if it were streaming
+            response = self.client.post(
+                "/v1/chat/completions",
+                json=payload
+            )
+            
+            if response.status_code != 200:
+                error_text = response.text
+                test_logger.error(f"Error: {response.status_code} - {error_text}")
+                result["error"] = f"HTTP {response.status_code}: {error_text}"
+                return result
+            
+            # Process the response as if it were streaming
+            first_token_received = False
+            first_token_time = None
+            received_provider = False
+            
+            if "data:" in response.text:
+                for line in response.text.splitlines():
+                    if line.startswith('data: ') and line != 'data: [DONE]':
+                        data = line[6:].strip()
+                        if not data:
+                            continue
                             
-                        if line.startswith('data: '):
-                            data = line[6:].strip()
-                            if data == "[DONE]":
+                        try:
+                            chunk = json.loads(data)
+                            if "error" in chunk:
+                                test_logger.error(f"Error: {chunk['error']['message']}")
+                                result["error"] = chunk["error"]["message"]
                                 break
+                            
+                            # Get the provider if available
+                            if "provider" in chunk and chunk["provider"] and not received_provider:
+                                result["provider"] = chunk["provider"]
+                                received_provider = True
+                            
+                            # Record time of first token
+                            if "content" in chunk and chunk["content"] and not first_token_received:
+                                first_token_time = datetime.now()
+                                first_token_received = True
                                 
-                            try:
-                                chunk = json.loads(data)
-                                if "error" in chunk:
-                                    test_logger.error(f"Error: {chunk['error']['message']}")
-                                    result["error"] = chunk["error"]["message"]
-                                    break
-                                
-                                # Record time of first token
-                                if not first_token_received:
-                                    first_token_time = datetime.now()
-                                    first_token_received = True
-                                    
-                                # Get content
-                                content = chunk.get("content", "")
-                                sys.stdout.write(content)
-                                sys.stdout.flush()
-                                
+                            # Get content
+                            content = chunk.get("content", "")
+                            if content:
+                                if verbose:
+                                    sys.stdout.write(content)
+                                    sys.stdout.flush()
                                 complete_content += content
-                                
-                            except json.JSONDecodeError:
-                                test_logger.error(f"Error parsing JSON: {data}")
+                            
+                        except json.JSONDecodeError as e:
+                            test_logger.error(f"Error parsing JSON: {data} - {str(e)}")
+            
+            end_time = datetime.now()
+            
+            # Calculate timings
+            total_time = (end_time - start_time).total_seconds()
+            ttft = None
+            if first_token_time:
+                ttft = (first_token_time - start_time).total_seconds()
+            
+            # Update result
+            result["content"] = complete_content
+            result["total_time"] = total_time
+            result["ttft"] = ttft
+            result["success"] = True
+            
+            # Print summary
+            if verbose:
+                print(f"\nModel: {model}")
+                print(f"Provider: {result['provider'] or 'unknown'}")
+                print(f"Total time: {total_time:.2f} seconds")
+                if ttft:
+                    print(f"Time to first token: {ttft:.2f} seconds")
                     
-                    end_time = datetime.now()
-                    
-                    # Calculate timings
-                    total_time = (end_time - start_time).total_seconds()
-                    ttft = None
-                    if first_token_time:
-                        ttft = (first_token_time - start_time).total_seconds()
-                    
-                    # Update result
-                    result["content"] = complete_content
-                    result["total_time"] = total_time
-                    result["ttft"] = ttft
-                    result["success"] = True
-                    
-                    if chunk:
-                        result["provider"] = chunk.get("provider", "unknown")
-                    
-                    # Print summary
-                    print(f"\nModel: {model}")
-                    if chunk:
-                        print(f"Provider: {chunk.get('provider', 'unknown')}")
-                    print(f"Total time: {total_time:.2f} seconds")
-                    if ttft:
-                        print(f"Time to first token: {ttft:.2f} seconds")
-        
         except Exception as e:
             test_logger.error(f"Error: {str(e)}")
             result["error"] = str(e)
         
         return result
 
-    async def compare_models(self, models: List[str], prompt: str) -> Dict[str, Dict[str, Any]]:
+    def compare_models(self, models: List[str], prompt: str) -> Dict[str, Dict[str, Any]]:
         """
         Compare streaming performance across multiple models.
         
@@ -177,11 +154,11 @@ class StreamingClient:
         
         for model in models:
             test_logger.info(f"Testing model: {model}")
-            result = await self.test_streaming(model, prompt)
+            result = self.test_streaming(model, prompt)
             results[model] = result
             
             # Add a short delay between requests
-            await asyncio.sleep(1)
+            time.sleep(1)
         
         # Print comparison table
         print("\n===== Model Comparison =====")
@@ -195,21 +172,46 @@ class StreamingClient:
         
         return results
 
+    def test_all_providers(self, prompt: str = "Tell me a short story about a robot learning to feel emotions.") -> Dict[str, Dict[str, Any]]:
+        """
+        Test streaming for one model from each provider.
+        
+        Args:
+            prompt: Prompt to send to each model
+            
+        Returns:
+            Dictionary mapping provider names to test results
+        """
+        # Get available models and group by provider
+        response = self.client.get("/v1/models/chat")
+        models_data = response.json()["models"]
+        
+        # Group models by provider
+        providers = {}
+        for model in models_data:
+            provider = model["provider"]
+            if provider not in providers:
+                providers[provider] = model["id"]
+        
+        # Get one model for each provider
+        test_models = list(providers.values())
+        test_logger.info(f"Testing one model from each provider: {test_models}")
+        
+        # Run the comparison
+        return self.compare_models(test_models, prompt)
 
-async def main():
-    """Example usage of the streaming client."""
-    client = StreamingClient()
+
+if __name__ == "__main__":
+    """Example usage of the streaming test."""
+    client = StreamingTest()
+    client.setup_method()
     
-    # Test with a single model
-    result = await client.test_streaming(
-        "gpt-3.5-turbo",
-        "Tell me a short story about a robot learning to feel emotions.",
-        verbose=True
-    )
+    # Test with all providers
+    client.test_all_providers()
     
-    # Compare multiple models
+    # Alternatively, test specific models
     models = ["gpt-3.5-turbo", "claude-3-5-sonnet", "gemini-2.0-pro"]
-    results = await client.compare_models(
+    results = client.compare_models(
         models,
         "Explain the concept of machine learning in simple terms."
     )
@@ -224,6 +226,3 @@ async def main():
         else:
             print(f"\nModel: {model}")
             print(f"Error: {model_result['error']}")
-
-if __name__ == "__main__":
-    asyncio.run(main())

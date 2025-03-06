@@ -15,13 +15,6 @@ sys.path.append(str(parent_dir))
 # Import utilities
 from testLib.test_utils import test_logger
 
-# Import fix_imports module to fix path issues
-try:
-    from serverRouter.fix_imports import fix_imports
-    fix_imports()
-    test_logger.info("Import fixes applied successfully")
-except ImportError:
-    test_logger.warning("Could not import fix_imports module")
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_environment():
@@ -49,17 +42,19 @@ def pytest_configure(config):
         "markers", "integration: mark a test as requiring a running API server"
     )
 
-# Skip integration tests by default unless --run-integration flag is provided
+# Add option to run integration tests, but now they run by default
 def pytest_addoption(parser):
     """Add custom command line options."""
     parser.addoption(
-        "--run-integration", action="store_true", default=False, help="run integration tests"
+        "--skip-integration", action="store_true", default=False, 
+        help="skip integration tests that require a running server"
     )
 
 def pytest_collection_modifyitems(config, items):
     """Modify test collection to handle markers."""
-    if not config.getoption("--run-integration"):
-        skip_integration = pytest.mark.skip(reason="need --run-integration option to run")
+    if config.getoption("--skip-integration"):
+        skip_integration = pytest.mark.skip(reason="integration tests skipped with --skip-integration")
         for item in items:
             if "integration" in item.keywords:
                 item.add_marker(skip_integration)
+    # Else, run them by default - now integration tests run unless specifically skipped

@@ -1,7 +1,9 @@
 # serverRouter/providers/togetherai/provider.py
 import os
 import asyncio
-from typing import AsyncGenerator, Dict, Any
+import logging
+from typing import AsyncGenerator, Dict, Any, List
+
 from serverRouter.core.interfaces import ChatProvider
 from serverRouter.core.datamodels import (
     ChatCompletionRequest, 
@@ -9,7 +11,22 @@ from serverRouter.core.datamodels import (
     ChatCompletionChunk
 )
 from serverRouter.core.exceptions import ProviderError
-import logging
+
+"""
+FUNCTION CALLING / TOOLS IMPLEMENTATION NOTES:
+
+* Tool Parameters Passing: We check if the request has tools, tool_choice, or 
+  response_format parameters and pass them to the Together API if present.
+
+* Tool Calls Extraction: We extract any tool calls from the response and format
+  them consistently with our API response structure.
+
+* Streaming Support: the streaming implementation have been adapted to handle tool
+  calls in the stream similar to how the OpenAI provider does it.
+
+https://docs.together.ai/reference/chat-completions-1
+
+"""
 
 class TogetherAIProvider(ChatProvider):
     """
@@ -36,25 +53,59 @@ class TogetherAIProvider(ChatProvider):
         Since the Together API is synchronous, we run it in a thread to avoid blocking.
         """
         try:
+            # Prepare base parameters
+            params = {
+                "model": request.model,
+                "messages": [{"role": msg.role, "content": msg.content} for msg in request.messages],
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens,
+            }
+            
+            # Add tools if specified
+            if hasattr(request, "tools") and request.tools:
+                params["tools"] = request.tools
+                
+            # Add tool choice if specified
+            if hasattr(request, "tool_choice") and request.tool_choice:
+                params["tool_choice"] = request.tool_choice
+                
+            # Add response format if specified
+            if hasattr(request, "response_format") and request.response_format:
+                params["response_format"] = request.response_format
+            
             # Run the synchronous API call in a thread pool to avoid blocking
             response = await asyncio.to_thread(
                 self.client.chat.completions.create,
-                model=request.model,
-                messages=[{"role": msg.role, "content": msg.content} for msg in request.messages],
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
+                **params
             )
+            
+            # Extract tool calls if present
+            tool_calls = None
+            if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                tool_calls = [
+                    {
+                        "id": tc.id,
+                        "type": tc.type,
+                        "function": {
+                            "name": tc.function.name,
+                            "arguments": tc.function.arguments
+                        }
+                    }
+                    for tc in response.choices[0].message.tool_calls
+                ]
                 
             return ChatCompletionResponse(
                 model=response.model,
-                content=response.choices[0].message.content,
+                content=response.choices[0].message.content or "",  # Handle None content when only tool calls
                 provider="together",
+                tool_calls=tool_calls,
                 usage={
                     "prompt_tokens": getattr(response.usage, "prompt_tokens", None),
                     "completion_tokens": getattr(response.usage, "completion_tokens", None)
                 }
             )
         except Exception as e:
+            logging.exception("Together AI API error")
             raise ProviderError(f"Together AI API error: {str(e)}")
             
     async def chat_complete_stream(self, request: ChatCompletionRequest) -> AsyncGenerator[ChatCompletionChunk, None]:
@@ -64,8 +115,26 @@ class TogetherAIProvider(ChatProvider):
         to avoid blocking the event loop.
         """
         try:
-            # Get all parameters ready
-            messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+            # Prepare base parameters
+            params = {
+                "model": request.model,
+                "messages": [{"role": msg.role, "content": msg.content} for msg in request.messages],
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens,
+                "stream": True
+            }
+            
+            # Add tools if specified
+            if hasattr(request, "tools") and request.tools:
+                params["tools"] = request.tools
+                
+            # Add tool choice if specified
+            if hasattr(request, "tool_choice") and request.tool_choice:
+                params["tool_choice"] = request.tool_choice
+                
+            # Add response format if specified
+            if hasattr(request, "response_format") and request.response_format:
+                params["response_format"] = request.response_format
             
             # Create a streaming response using asyncio.to_thread to avoid blocking
             loop = asyncio.get_event_loop()
@@ -73,14 +142,12 @@ class TogetherAIProvider(ChatProvider):
             # Get the stream iterator
             stream_iterator = await loop.run_in_executor(
                 None,
-                lambda: self.client.chat.completions.create(
-                    model=request.model,
-                    messages=messages,
-                    temperature=request.temperature,
-                    max_tokens=request.max_tokens,
-                    stream=True
-                )
+                lambda: self.client.chat.completions.create(**params)
             )
+            
+            # Variables to track tool calls
+            current_tool_calls = []
+            tool_call_chunks = {}  # Map from tool_call_id to accumulated chunks
             
             # Process the chunks one by one
             while True:
@@ -90,11 +157,46 @@ class TogetherAIProvider(ChatProvider):
                     if chunk is None:  # End of iterator
                         break
                     
-                    # Check if the chunk has content
+                    # Check if the chunk has content or tool calls
                     if hasattr(chunk, 'choices') and chunk.choices:
                         choice = chunk.choices[0]
                         
-                        if hasattr(choice, 'delta') and choice.delta and hasattr(choice.delta, 'content') and choice.delta.content:
+                        # Handle tool call chunks (similar to OpenAI implementation)
+                        if hasattr(choice, 'delta') and hasattr(choice.delta, 'tool_calls') and choice.delta.tool_calls:
+                            for tool_call in choice.delta.tool_calls:
+                                # Initialize tool call if new
+                                tool_call_id = tool_call.id
+                                if tool_call_id not in tool_call_chunks:
+                                    tool_call_chunks[tool_call_id] = {
+                                        "id": tool_call_id,
+                                        "type": tool_call.type or "function",
+                                        "function": {
+                                            "name": tool_call.function.name or "",
+                                            "arguments": tool_call.function.arguments or ""
+                                        }
+                                    }
+                                else:
+                                    # Update existing tool call
+                                    if tool_call.function.name:
+                                        tool_call_chunks[tool_call_id]["function"]["name"] = tool_call.function.name
+                                    if tool_call.function.arguments:
+                                        tool_call_chunks[tool_call_id]["function"]["arguments"] += tool_call.function.arguments
+                                
+                                # Add to current batch of tool calls
+                                current_tool_calls = list(tool_call_chunks.values())
+                                
+                                # Yield a chunk with the updated tool calls
+                                yield ChatCompletionChunk(
+                                    model=chunk.model,
+                                    content="",
+                                    provider="together",
+                                    finish_reason=None,
+                                    tool_calls=current_tool_calls
+                                )
+                                continue
+                        
+                        # Handle content chunks
+                        if hasattr(choice, 'delta') and hasattr(choice.delta, 'content') and choice.delta.content:
                             # Yield the content chunk
                             yield ChatCompletionChunk(
                                 model=chunk.model,
@@ -108,7 +210,8 @@ class TogetherAIProvider(ChatProvider):
                                 model=chunk.model,
                                 content="",
                                 provider="together",
-                                finish_reason=choice.finish_reason
+                                finish_reason=choice.finish_reason,
+                                tool_calls=current_tool_calls if current_tool_calls else None
                             )
                 except StopIteration:
                     break
@@ -121,14 +224,11 @@ class TogetherAIProvider(ChatProvider):
                 model=request.model,
                 content="",
                 provider="together",
-                finish_reason="stop"
+                finish_reason="stop",
+                tool_calls=current_tool_calls if current_tool_calls else None
             )
             
         except Exception as e:
             logging.exception("Together AI streaming error")
             raise ProviderError(f"Together AI streaming API error: {str(e)}")
     
-    async def supports_streaming(self) -> bool:
-        """Check if this provider supports streaming"""
-        # Together AI supports streaming via the OpenAI-compatible API
-        return True

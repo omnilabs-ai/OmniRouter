@@ -46,7 +46,6 @@ app.include_router(model_routes.router)
 app.include_router(completion_routes.router)
 
 
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to OmniLLM!"}

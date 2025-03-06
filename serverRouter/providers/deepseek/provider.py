@@ -45,14 +45,19 @@ class DeepSeekProvider(ChatProvider):
             }
 
             # Add tools if specified
+            # Enables the model to call external functions defined by the API user
             if hasattr(request, "tools") and request.tools:
                 params["tools"] = request.tools
                 
             # Add tool choice if specified
+            # Gives the API caller control over which tools the model should use. 
+            # It can force the model to use a specific tool or let it decide.
             if hasattr(request, "tool_choice") and request.tool_choice:
                 params["tool_choice"] = request.tool_choice
                 
             # Add response format if specified
+            # Allows forcing the model to return responses in specific formats like JSON, 
+            # which makes integration with other systems much easier.
             if hasattr(request, "response_format") and request.response_format:
                 params["response_format"] = request.response_format
 

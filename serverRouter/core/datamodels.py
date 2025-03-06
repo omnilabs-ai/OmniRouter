@@ -34,8 +34,18 @@ class ChatCompletionResponse(BaseModel):
         default_factory=dict,
         description="Token usage statistics"
     )
-# Add streaming-specific data models
 
+
+# Add streaming
+
+
+"""
+
+ChatCompletionChunck is used specifically for streaming responses. 
+Each chunk contains a small portion of the generated content instead of the complete response. 
+Clients receive multiple chunks in sequence that they can display progressively.
+
+"""
 class ChatCompletionChunk(BaseModel):
     """A chunk of a streaming chat completion response"""
     model: str = Field(..., description="Name of the model used")
@@ -46,6 +56,15 @@ class ChatCompletionChunk(BaseModel):
         description="Reason the generation finished, if applicable"
     )
     
+"""
+
+StreamProgress Class tracks the state of an ongoing stream. 
+It monitors how many tokens have been generated and whether the response is complete. 
+It is not currently used in the production code;
+it's valuable for stream management if we implement features like streaming timeouts or progress indicators. 
+If we're not using it, we can move it to test utilities.
+
+"""
 class StreamProgress(BaseModel):
     """Information about the progress of a streaming response"""
     completion_tokens: int = Field(

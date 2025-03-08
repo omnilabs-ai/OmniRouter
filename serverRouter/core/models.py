@@ -284,6 +284,17 @@ IMAGE_MODELS = {
         ),
         tokenCost = 0.0
     ),
+    
+    "imagen-3.0-generate-002": ModelInfo(
+        name="imagen-3.0-generate-002",
+        provider=ModelProvider.GEMINI,
+        description=(
+            "Google's Imagen is a photorealistic image generation model. "
+            "Strengths: Excellent photorealism, strong understanding of prompts, and natural compositions. "
+            "Weaknesses: Moderate generation speed and computational requirements."
+        ),
+        tokenCost = 0.03
+    ),
 }
 
 # Combined models dictionary

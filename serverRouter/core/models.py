@@ -202,32 +202,34 @@ CHAT_MODELS = {
         tokenCost=0.00525,  # Using Gemini 1.5 Pro pricing as reference
         latency=1.5  # Estimated based on large context and multimodal processing
     ),
-    # Note: Together AI models are having issues with the API.
     "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": ModelInfo(
         name="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
         provider=ModelProvider.TOGETHER,
         description="Meta Llama 3.1 8B Instruct Turbo from Together AI",
-        max_tokens=4096
+        max_tokens=4096,
+        tokenCost = 0.1
     ),
     "Qwen/Qwen2-VL-72B-Instruct": ModelInfo(
         name="Qwen/Qwen2-VL-72B-Instruct",
         provider=ModelProvider.TOGETHER,
         description="Qwen2-VL (72B) Instruct from Together AI",
-        max_tokens=4096
+        max_tokens=4096,
+        tokenCost = 1.2
     ),
     "mistralai/Mistral-7B-Instruct-v0.2": ModelInfo(
         name="mistralai/Mistral-7B-Instruct-v0.2",
         provider=ModelProvider.TOGETHER,
         description="Mistral (7B) Instruct v0.2 from Together AI",
-        max_tokens=4096
+        max_tokens=4096,
+        tokenCost = 0.2
     ),
     "microsoft/WizardLM-2-8x22B": ModelInfo(
         name="microsoft/WizardLM-2-8x22B",
         provider=ModelProvider.TOGETHER,
         description="WizardLM-2 (8x22B) from Together AI",
-        max_tokens=4096
+        max_tokens=4096,
+        tokenCost = 0.8
     ),
-    # ...we need to add additional Together models as needed
 }
 
 # Primary image models registry
@@ -240,6 +242,7 @@ IMAGE_MODELS = {
             "Strengths: Highly detailed and photorealistic images, excellent prompt following. "
             "Weaknesses: Higher cost and longer generation time."
         ),
+        tokenCost = 0.08
     ),
     "dall-e-2": ModelInfo(
         name="dall-e-2",
@@ -249,6 +252,7 @@ IMAGE_MODELS = {
             "Strengths: Fast generation and good quality for common use cases. "
             "Weaknesses: Less detailed and accurate compared to DALL-E 3."
         ),
+        tokenCost = 0.01
     ),
     "stable-diffusion-3.5-large": ModelInfo(
         name="stable-diffusion-3.5-large",
@@ -258,6 +262,7 @@ IMAGE_MODELS = {
             "Strengths: Excellent understanding of prompts, highly detailed image generation, and natural compositions. "
             "Weaknesses: Higher computational requirements and slower generation time."
         ),
+        tokenCost = 0.065
     ),
     "stable-diffusion-3.5-turbo": ModelInfo(
         name="stable-diffusion-3.5-turbo",
@@ -267,6 +272,7 @@ IMAGE_MODELS = {
             "Strengths: Quick response time and balanced quality-to-speed ratio. "
             "Weaknesses: Slightly lower detail quality compared to the Large variant."
         ),
+        tokenCost = 0.04
     ),
     "black-forest-labs/FLUX.1-schnell-Free": ModelInfo(
         name="black-forest-labs/FLUX.1-schnell-Free",
@@ -276,6 +282,7 @@ IMAGE_MODELS = {
             "Strengths: Rapid image generation with good detail and natural compositions. "
             "Weaknesses: May not match the photorealism of larger models."
         ),
+        tokenCost = 0.0
     ),
 }
 

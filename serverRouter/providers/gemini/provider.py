@@ -40,14 +40,29 @@ https://ai.google.dev/docs/function_calling
 """
 
 class GeminiProvider(ChatProvider):
+    """
+    Provider for Google's Gemini models.
+    Implements the ChatProvider interface for Gemini models.
+    """
+    
     def __init__(self, api_key: str = None):
+        """
+        Initialize the Gemini provider with API key.
+        
+        Args:
+            api_key: Optional API key. If not provided, reads from environment variable.
+        
+        Raises:
+            ProviderError: If no API key is available
+        """
         api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ProviderError("No GEMINI_API_KEY provided. Please add it to your .env file.")
         genai.configure(api_key=api_key)
         
     async def supports_streaming(self) -> bool:
-        """Check if this provider supports streaming.
+        """
+        Check if this provider supports streaming.
         
         Returns:
             bool: True if streaming is supported
@@ -55,6 +70,18 @@ class GeminiProvider(ChatProvider):
         return True
         
     async def chat_complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+        """
+        Generate a chat completion using Gemini's API.
+        
+        Args:
+            request: ChatCompletionRequest containing the input parameters
+            
+        Returns:
+            ChatCompletionResponse containing the generated response
+            
+        Raises:
+            ProviderError: If the API request fails
+        """
         try:
             # Format messages for Gemini
             messages = []
@@ -134,12 +161,19 @@ class GeminiProvider(ChatProvider):
             raise ProviderError(f"Gemini API error (chat): {str(e)}")
             
     async def chat_complete_stream(self, request: ChatCompletionRequest) -> AsyncGenerator[ChatCompletionChunk, None]:
-        """Stream a chat completion using Gemini's API"""
-        try:
-            # Add debug log
-            logging.info(f"Starting Gemini streaming for request: {request.model}")
-            logging.info(f"Messages: {[msg.content for msg in request.messages]}")
+        """
+        Stream a chat completion using Gemini's API.
+        
+        Args:
+            request: ChatCompletionRequest containing the input parameters
             
+        Returns:
+            AsyncGenerator yielding ChatCompletionChunk objects
+            
+        Raises:
+            ProviderError: If the API request fails
+        """
+        try:
             # Format messages for Gemini
             messages = []
             for msg in request.messages:
@@ -158,33 +192,24 @@ class GeminiProvider(ChatProvider):
                 generation_config=generation_config
             )
             
-            # Add more debug logs
-            logging.info(f"Requesting content from Gemini model: {request.model}")
-            
             # Stream the response
             response = model.generate_content(
                 contents=messages,
                 stream=True
             )
             
-            logging.info("Got response from Gemini, processing stream...")
-            
             # Track if we've yielded any content
             yielded_content = False
             
             # Process the stream manually
             for chunk in response:
-                logging.info(f"Received chunk: {chunk}")
-                
                 if not chunk.candidates or not chunk.candidates[0].content or not chunk.candidates[0].content.parts:
-                    logging.info("Empty chunk or no content parts")
                     continue
                 
                 for part in chunk.candidates[0].content.parts:
                     if hasattr(part, 'text') and part.text:
                         # Regular text chunk
                         content = part.text
-                        logging.info(f"Found text content: {content}")
                         yielded_content = True
                         
                         yield ChatCompletionChunk(
@@ -193,17 +218,14 @@ class GeminiProvider(ChatProvider):
                             provider="gemini",
                             finish_reason=None
                         )
-                    else:
-                        logging.info(f"Part has no text attribute or empty text: {part}")
             
             # If we didn't yield any content, yield a default response
             if not yielded_content:
-                logging.info("No content yielded, sending default haiku")
-                default_haiku = "Code flows like water\nBugs emerge from the shadows\nDebugger saves all"
+                default_response = "I'm sorry, I couldn't generate a proper response."
                 
                 yield ChatCompletionChunk(
                     model=request.model,
-                    content=default_haiku,
+                    content=default_response,
                     provider="gemini",
                     finish_reason=None
                 )
@@ -222,7 +244,7 @@ class GeminiProvider(ChatProvider):
     
     def _convert_tools_to_gemini_format(self, openai_tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Convert OpenAI-style tools to Gemini's format
+        Convert OpenAI-style tools to Gemini's format.
         
         Args:
             openai_tools: List of tools in OpenAI format

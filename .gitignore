@@ -14,3 +14,7 @@ serverRouter/providers/together/sample.py
 
 .DS_Store
 serverRouter/DS_Store
+
+test_image_comparison_server.py
+test_gem_server.py
+test_dalle_server.py

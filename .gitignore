@@ -11,10 +11,11 @@ test_sd_server.py
 test_together_server.py
 serverRouter/providers/stablediffusion/sample.py
 serverRouter/providers/together/sample.py
-
 .DS_Store
 serverRouter/DS_Store
-
 test_image_comparison_server.py
 test_gem_server.py
 test_dalle_server.py
+testLib/logs/
+test_gemini_chat_server.py
+testAyush/

@@ -62,3 +62,5 @@ websockets==14.2
 yarl==1.18.3
 numpy==1.26.1
 python-multipart==0.0.6
+# Very important as I have changed the way chat completion is done in the provider.py file for Gemini
+google-genai==1.5.0

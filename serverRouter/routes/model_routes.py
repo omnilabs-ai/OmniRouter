@@ -1,27 +1,8 @@
-from fastapi import APIRouter, HTTPException, Security, Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from serverRouter.core.config import VALID_API_KEYS
-
-from serverRouter.core.datamodels import (
-    ChatCompletionRequest,
-    ChatCompletionResponse,
-    ModelProvider,
-    ImageGenerationRequest,
-    ImageGenerationResponse
-)
+from fastapi import APIRouter, Security, Depends
+from serverRouter.routes.utils import verify_api_key
 from serverRouter.core.models import MODELS, CHAT_MODELS, IMAGE_MODELS
 
 router = APIRouter(prefix="/v1", tags=["models"])
-
-security = HTTPBearer()
-
-def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
-    if credentials.credentials not in VALID_API_KEYS:
-        raise HTTPException(
-            status_code=401,
-            detail=f"Invalid API key"
-        )
-    return credentials.credentials
 
 @router.get("/models")
 async def list_models(api_key: str = Depends(verify_api_key)):

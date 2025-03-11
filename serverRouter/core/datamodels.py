@@ -1,7 +1,10 @@
-from typing import List, Optional, Dict, Literal, Union, Any
+from typing import List, Optional, Dict, Literal, Union, Any, AsyncGenerator
 from pydantic import BaseModel, Field
 from enum import Enum
 from collections.abc import Mapping
+
+# Type alias for streaming responses
+ChatCompletionGenerator = AsyncGenerator[str, None]
 
 class ModelProvider(str, Enum):
     """Supported model providers"""
@@ -56,6 +59,7 @@ class ImageGenerationResponse(BaseModel):
     urls: List[str] = Field(..., description="URLs of the generated images")
     model: str = Field(..., description="Name of the model used")
     provider: str = Field(..., description="Provider that generated the images")
+
 
 class BenchmarkScores(BaseModel, Mapping):
     MMLU: Optional[float] = Field(None, ge=0.0, le=1.0)

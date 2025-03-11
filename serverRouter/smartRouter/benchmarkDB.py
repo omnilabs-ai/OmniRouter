@@ -82,4 +82,3 @@ def generate_benchmark_embeddings(output_file: str = "serverRouter/smartRouter/b
 if __name__ == "__main__":
     # You can set your API key here or use environment variable OPENAI_API_KEY
     generate_benchmark_embeddings()
-

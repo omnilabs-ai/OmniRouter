@@ -7,7 +7,7 @@ from serverRouter.providers.gemini.provider import GeminiProvider
 from serverRouter.providers.deepseek.provider import DeepSeekProvider
 from serverRouter.providers.together.provider import TogetherAIProvider
 from serverRouter.providers.stablediffusion.provider import StableDiffusionProvider
-from serverRouter.routes import model_routes, completion_routes
+from serverRouter.routes import model_routes, completion_routes, smart_routes
 from serverRouter.core.config import PROVIDERS
 
 # uvicorn serverRouter.router:app --reload
@@ -38,7 +38,6 @@ def initialize_providers():
     except Exception as e:
         raise
 
-
 # Initialize providers during startup
 try:
     initialize_providers()
@@ -49,6 +48,8 @@ except Exception:
 # Include routers from separate files
 app.include_router(model_routes.router)
 app.include_router(completion_routes.router)
+app.include_router(smart_routes.router)
+
 
 @app.get("/")
 async def root():

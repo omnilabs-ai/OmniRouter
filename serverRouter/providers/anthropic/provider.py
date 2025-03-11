@@ -1,9 +1,10 @@
 from typing import Dict, Any
 import anthropic
 from serverRouter.core.interfaces import ChatProvider
-from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionResponse, ChatMessage
+from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionResponse, ChatMessage, ChatCompletionGenerator
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -55,3 +56,24 @@ class AnthropicProvider(ChatProvider):
             raise ProviderError(f"Anthropic API error: {str(e)}")
         except Exception as e:
             raise ProviderError(f"Unexpected error: {str(e)}")
+    
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
+        try:
+            async with self.client.messages.stream(
+                model=request.model,
+                messages=[
+                    {"role": msg.role, "content": msg.content}
+                    for msg in request.messages
+                ],
+                max_tokens=request.max_tokens or 4092,
+                temperature=request.temperature or 1.0
+            ) as stream:
+                async for chunk in stream.text_stream:
+                    yield f"data: {json.dumps({'content': chunk})}\n\n"
+                
+            yield "data: [DONE]\n\n"
+
+        except Exception as e:
+            raise ProviderError(f"Unexpected error: {str(e)}")
+
+

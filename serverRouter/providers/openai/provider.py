@@ -1,15 +1,18 @@
 from typing import Dict, Any
 from openai import AsyncOpenAI
 import os
+import asyncio
 from serverRouter.core.interfaces import ChatProvider, ImageProvider
 from serverRouter.core.datamodels import (
     ChatCompletionRequest, 
     ChatCompletionResponse,
     ImageGenerationRequest,
-    ImageGenerationResponse
+    ImageGenerationResponse,
+    ChatCompletionGenerator
 )
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
+import json
 load_dotenv()
 
 class OpenAIProvider(ChatProvider, ImageProvider):
@@ -25,8 +28,7 @@ class OpenAIProvider(ChatProvider, ImageProvider):
 
         except Exception as e:
             raise ProviderError(f"Failed to initialize OpenAI client: {str(e)}")
-
-            
+          
     async def chat_complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         try:
             response = await self.client.chat.completions.create(
@@ -50,6 +52,31 @@ class OpenAIProvider(ChatProvider, ImageProvider):
             )
         except Exception as e:
             raise ProviderError(f"OpenAI API error: {str(e)}")
+    
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
+        try:
+            stream = await self.client.chat.completions.create(
+                model=request.model,
+                messages=[
+                    {"role": msg.role, "content": msg.content}
+                    for msg in request.messages
+                ],
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                stream=True
+            )
+            
+            async for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    # Format as proper SSE
+                    content = chunk.choices[0].delta.content
+                    yield f"data: {json.dumps({'content': content})}\n\n"
+            
+            # Signal end of stream
+            yield "data: [DONE]\n\n"
+                    
+        except Exception as e:
+            raise ProviderError(f"OpenAI API error during streaming: {str(e)}")
 
     async def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
         try:

@@ -7,9 +7,12 @@ from serverRouter.core.interfaces import ChatProvider
 from serverRouter.core.datamodels import (
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ChatCompletionGenerator
 )
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
+import json
+
 load_dotenv()
 
 class GeminiProvider(ChatProvider):
@@ -18,6 +21,7 @@ class GeminiProvider(ChatProvider):
         if not api_key:
             raise ProviderError("No GEMINI_API_KEY provided. Please add it to your .env file.")
         genai.configure(api_key=api_key)
+
         
     async def chat_complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         try:
@@ -49,4 +53,32 @@ class GeminiProvider(ChatProvider):
                 
         except Exception as e:
             raise ProviderError(f"Gemini API error (chat): {str(e)}")
+        
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
+        try:
+            messages = []
+            for msg in request.messages:
+                role = "model" if msg.role == "assistant" else msg.role
+                messages.append({"role": role, "parts": [msg.content]})
+
+            model = genai.GenerativeModel(model_name=request.model)
+            
+            response = model.generate_content(
+                contents=messages,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=request.max_tokens or 2048,
+                    temperature=request.temperature or 1.0
+                ),
+                stream=True
+            )
+            
+            for chunk in response:
+                if chunk.text:
+                    yield f"data: {json.dumps({'content': chunk.text})}\n\n"
+            
+            yield "data: [DONE]\n\n"
+            
+        except Exception as e:
+            raise ProviderError(f"Gemini API error (stream): {str(e)}")
+        
         

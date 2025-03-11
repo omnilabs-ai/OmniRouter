@@ -6,9 +6,11 @@ from serverRouter.core.datamodels import (
     ChatCompletionRequest, 
     ChatCompletionResponse,
     ImageGenerationRequest,
-    ImageGenerationResponse
+    ImageGenerationResponse,
+    ChatCompletionGenerator
 )
 from serverRouter.core.exceptions import ProviderError
+import json
 
 class TogetherAIProvider(ChatProvider, ImageProvider):
     """
@@ -55,6 +57,33 @@ class TogetherAIProvider(ChatProvider, ImageProvider):
             )
         except Exception as e:
             raise ProviderError(f"Together AI API error: {str(e)}")
+        
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
+        try:
+            messages = []
+            for msg in request.messages:
+                role = "model" if msg.role == "assistant" else msg.role
+                messages.append({"role": role, "parts": [msg.content]})
+
+            response = await asyncio.to_thread(
+                self.client.chat.completions.create,
+                model=request.model,
+                messages=[{"role": msg.role, "content": msg.content} for msg in request.messages],
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                stream=True
+            )
+
+            for chunk in response:
+                if chunk.choices[0].delta.content is not None:
+                    # Format as proper SSE
+                    content = chunk.choices[0].delta.content
+                    yield f"data: {json.dumps({'content': content})}\n\n"
+            
+            yield "data: [DONE]\n\n"
+            
+        except Exception as e:
+            raise ProviderError(f"Together AI API error (stream): {str(e)}")
 
     async def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
         """
@@ -100,3 +129,5 @@ class TogetherAIProvider(ChatProvider, ImageProvider):
             )
         except Exception as e:
             raise ProviderError(f"Together AI Image API error: {str(e)}")
+
+

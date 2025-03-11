@@ -1,0 +1,41 @@
+from fastapi import APIRouter, HTTPException, Security, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from serverRouter.core.config import smart_router
+from serverRouter.routes.utils import verify_api_key
+from serverRouter.core.datamodels import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    SmartRouterRequest
+)
+
+from serverRouter.routes.completion_routes import create_chat_completion
+
+router = APIRouter(prefix="/v1", tags=["smart"])
+
+@router.post("/router/smart_select")
+async def smart_select(
+    request: SmartRouterRequest,
+    api_key: str = Depends(verify_api_key)
+) -> ChatCompletionResponse:
+    """Get model recommendations based on the query and preferences."""
+    try:
+        result = smart_router.get_top_user_models(
+            query=request.messages[-1].content,
+            k=request.k,
+            model_names=request.model_names,
+            rel_cost=request.rel_cost,
+            rel_latency=request.rel_latency,
+            rel_accuracy=request.rel_accuracy
+        )
+
+        response = await create_chat_completion(
+            request=ChatCompletionRequest(
+                model=result["model"],
+                messages=request.messages,
+            )
+        )
+
+        return response
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 

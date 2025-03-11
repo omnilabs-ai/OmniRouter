@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local development
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel/
+.vercelignore
+vercel.json
+
+# OS specific
+.DS_Store
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Firebase credentials
+*firebase-adminsdk*.json 

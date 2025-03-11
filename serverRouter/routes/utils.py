@@ -1,13 +1,13 @@
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from serverRouter.core.config import VALID_API_KEYS, PROVIDERS
+from serverRouter.core import config
 from serverRouter.core.models import CHAT_MODELS, IMAGE_MODELS
 from serverRouter.core.datamodels import ModelProvider
 
 security = HTTPBearer()
 
 def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
-    if credentials.credentials not in VALID_API_KEYS:
+    if credentials.credentials not in config.VALID_API_KEYS:
         raise HTTPException(
             status_code=401,
             detail=f"Invalid API key"
@@ -23,7 +23,7 @@ def get_model_and_provider(model_id: str, models_dict):
             detail=f"Unknown model: {model_id}"
         )
     
-    provider = PROVIDERS.get(model_info.provider)
+    provider = config.PROVIDERS.get(model_info.provider)
     if not provider:
         raise HTTPException(
             status_code=500,

@@ -1,12 +1,20 @@
 """Shared configuration constants for the OmniLLM API."""
-from serverRouter.smartRouter.SmartRouter import SmartRouter
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-VALID_API_KEYS = {
-    "test-sk1o83e",
-}
+cred = credentials.Certificate('omnilabs-43460-firebase-adminsdk-fbsvc-71358ad780.json')
+app = firebase_admin.initialize_app(cred)
+db = firestore.client()
+VALID_API_KEYS = set()
 
-# Provider instances cache
+def update_api_keys(keys_snapshot, changes, read_time):
+    """Update the VALID_API_KEYS set when changes occur in Firestore."""
+    global VALID_API_KEYS
+    VALID_API_KEYS = {key.id for key in keys_snapshot}
+
+initial_keys = db.collection('api_keys').get()
+update_api_keys(initial_keys, None, None)
+api_keys_watch = db.collection('api_keys').on_snapshot(update_api_keys)
+
 PROVIDERS = {}
 
-# Smart router instance
-smart_router = SmartRouter() 

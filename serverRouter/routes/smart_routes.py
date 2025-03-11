@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Security, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from serverRouter.core.config import smart_router
 from serverRouter.routes.utils import verify_api_key
 from serverRouter.core.datamodels import (
     ChatCompletionRequest,
@@ -9,9 +8,11 @@ from serverRouter.core.datamodels import (
 )
 
 from serverRouter.routes.completion_routes import create_chat_completion
+from serverRouter.smartRouter.SmartRouter import SmartRouter
 
 router = APIRouter(prefix="/v1", tags=["smart"])
 
+smart_router = SmartRouter() 
 @router.post("/router/smart_select")
 async def smart_select(
     request: SmartRouterRequest,

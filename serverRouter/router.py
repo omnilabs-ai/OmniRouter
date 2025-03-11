@@ -10,7 +10,6 @@ from serverRouter.providers.stablediffusion.provider import StableDiffusionProvi
 from serverRouter.routes import model_routes, completion_routes, smart_routes
 from serverRouter.core.config import PROVIDERS
 
-# uvicorn serverRouter.router:app --reload
 
 app = FastAPI(title="OmniLLM", description="One Key, One API, Hundreds of Models")
 
@@ -54,3 +53,6 @@ app.include_router(smart_routes.router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to OmniLLM!"}
+
+
+# uvicorn serverRouter.router:app --reload

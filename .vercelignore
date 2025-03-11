@@ -2,11 +2,11 @@
 **/tests
 **/*.pyc
 dev-requirements.txt
-testLib
-clientLib
-upNext
+testLib/**
 .git
 .gitignore
 pytest.ini
-venv
+venv/**
 .pytest_cache
+.DS_Store
+*.log

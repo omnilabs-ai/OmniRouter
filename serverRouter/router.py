@@ -52,7 +52,7 @@ app.include_router(smart_routes.router)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to OmniLLM! :)"}
+    return {"message": "Welcome to OmniLLM!"}
 
 
 # uvicorn serverRouter.router:app --reload

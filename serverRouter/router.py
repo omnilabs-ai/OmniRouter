@@ -37,14 +37,9 @@ def initialize_providers():
     except Exception as e:
         raise
 
-# Initialize providers during startup
-try:
-    initialize_providers()
-except Exception:
-    import sys
-    sys.exit(1)
-
-# Include routers from separate files
+# # Initialize providers during startup
+initialize_providers()
+# # Include routers from separate files
 app.include_router(model_routes.router)
 app.include_router(completion_routes.router)
 app.include_router(smart_routes.router)
@@ -56,3 +51,5 @@ async def root():
 
 
 # uvicorn serverRouter.router:app --reload
+
+

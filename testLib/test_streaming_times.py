@@ -19,8 +19,7 @@ class TestStreaming(BaseTest):
     def streaming_response(self):
         # Make the streaming request
         start_time = datetime.now()
-        current_time = start_time.strftime("%H:%M:%S.%f")[:-3]
-        self.logger.info(f"[{current_time}] Sending Stream request: {self.test_request}")
+        self.logger.info(f"[+0.000000s] Sending Stream request: {self.test_request}")
         response = self.client.post(
             "/v1/chat/completions/stream",
             json=self.test_request.model_dump()
@@ -42,13 +41,14 @@ class TestStreaming(BaseTest):
                     if data == '[DONE]':
                         break
                     try:
+                        current_time = datetime.now()
                         if not first_chunk_time:
-                            first_chunk_time = datetime.now()
+                            first_chunk_time = current_time
                         chunk_data = json.loads(data)
                         chunk_content = chunk_data.get('content', '')
                         content += chunk_content
-                        current_time = (datetime.now() - start_time).strftime("%H:%M:%S.%f")[:-3]
-                        self.logger.info(f"[{current_time}] Chunk content: {chunk_content}")
+                        elapsed = (current_time - start_time).total_seconds()
+                        self.logger.info(f"[+{elapsed:.6f}s] Chunk content: {chunk_content}")
                         chunks.append(chunk_content)
                     except json.JSONDecodeError:
                         self.logger.error(f"Failed to parse chunk: {data}")
@@ -61,9 +61,9 @@ class TestStreaming(BaseTest):
         total_time = (end_time - start_time).total_seconds()
         
         # Log timing information
-        self.logger.info(f"Streaming metrics:")
-        self.logger.info(f"Time to first chunk: {time_to_first_chunk:.3f} seconds")
-        self.logger.info(f"Total time: {total_time:.3f} seconds")
+        self.logger.info(f"\nStreaming metrics:")
+        self.logger.info(f"Time to first chunk: +{time_to_first_chunk:.6f}s")
+        self.logger.info(f"Total time: +{total_time:.6f}s")
         self.logger.info(f"Final content: {content}")
         self.logger.info(f"Number of chunks received: {len(chunks)}")
         
@@ -74,8 +74,7 @@ class TestStreaming(BaseTest):
         
     def baseline_response(self):
         start_time = datetime.now()
-        current_time = start_time.strftime("%H:%M:%S.%f")[:-3]
-        self.logger.info(f"[{current_time}] Sending static request: {self.test_request}")
+        self.logger.info(f"[+0.000000s] Sending static request: {self.test_request}")
         response = self.client.post(
             "/v1/chat/completions",
             json=self.test_request.model_dump()
@@ -87,8 +86,8 @@ class TestStreaming(BaseTest):
         total_time = (end_time - start_time).total_seconds()
         
         # Log timing information
-        self.logger.info(f"Static response metrics:")
-        self.logger.info(f"Total time: {total_time:.3f} seconds")
+        self.logger.info(f"\nStatic response metrics:")
+        self.logger.info(f"Total time: +{total_time:.6f}s")
         self.logger.info(f"Response content: {response_data.get('content', '')}")
         
         return total_time
@@ -100,12 +99,6 @@ class TestStreaming(BaseTest):
         static_time = self.baseline_response()
         
         self.logger.info("\nResponse Time Comparison:")
-        self.logger.info(f"Streaming total time: {streaming_time:.3f} seconds")
-        self.logger.info(f"Static total time: {static_time:.3f} seconds")
-        self.logger.info(f"Difference: {static_time - streaming_time:.3f} seconds")
-        static_time = self.baseline_response()
-        
-        self.logger.info("\nResponse Time Comparison:")
-        self.logger.info(f"Streaming total time: {streaming_time:.3f} seconds")
-        self.logger.info(f"Static total time: {static_time:.3f} seconds")
-        self.logger.info(f"Difference: {static_time - streaming_time:.3f} seconds")
+        self.logger.info(f"Streaming total time: {streaming_time:.6f}s")
+        self.logger.info(f"Static total time: {static_time:.6f}s")
+        self.logger.info(f"Difference: {static_time - streaming_time:+.6f}s")

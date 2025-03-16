@@ -18,45 +18,17 @@ import logging
 import os
 import sys
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
-# Try to import necessary modules
-try:
-    from serverRouter.core.datamodels import (
-        ModelInfo, 
-        ChatMessage, 
-        SmartRouterRequest,
-        ModelProvider,
-        BenchmarkScores
-    )
-    from serverRouter.core.models import CHAT_MODELS
-except ImportError as e:
-    logger.error(f"Error importing required modules: {e}")
-    logger.error("Make sure you're running from the project root directory")
-    raise
+from serverRouter.core.datamodels import (
+    ModelInfo, 
+    ChatMessage, 
+    SmartRouterRequest,
+    ModelProvider,
+    BenchmarkScores
+)
+from serverRouter.core.models import CHAT_MODELS
+from serverRouter.smartRouter.embedding_model import OpenAIEmbeddings
 
-# Import the embeddings client
-try:
-    # First try importing directly (if in same directory)
-    from .embedding_model import OpenAIEmbeddings
-except (ImportError, ValueError):
-    try:
-        # Try as absolute import
-        from serverRouter.smartRouter.embedding_model import OpenAIEmbeddings
-    except ImportError:
-        # If that fails, add the current directory to the path and try again
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        if current_dir not in sys.path:
-            sys.path.append(current_dir)
-        try:
-            from embedding_model import OpenAIEmbeddings
-        except ImportError:
-            logger.error("Cannot import OpenAIEmbeddings. Make sure embedding_model.py is in the same directory.")
-            raise
-
-# Task categories mapped to benchmark relevance weights
 TASK_TO_BENCHMARK_WEIGHTS = {
     "coding": {
         "HumanEval": 0.7,
@@ -129,36 +101,21 @@ class SmartRouter:
     def __init__(self, embeddings_path: str = "serverRouter/smartRouter/benchmark_embeddings.pkl"):
         """Initialize the SmartRouter with benchmark embeddings."""
         self.embeddings_client = OpenAIEmbeddings()
-        self.load_benchmark_embeddings(embeddings_path)
+        with open(embeddings_path, 'rb') as f:
+            self.benchmark_embeddings = pickle.load(f)
         self.models = CHAT_MODELS
-
-    def load_benchmark_embeddings(self, file_path: str) -> None:
-        """Load benchmark embeddings from pickle file."""
-        try:
-            with open(file_path, 'rb') as f:
-                self.benchmark_embeddings = pickle.load(f)
-            logger.info(f"Loaded benchmark embeddings from {file_path}")
-        except FileNotFoundError:
-            logger.error(f"Benchmark embeddings file not found at {file_path}")
-            # Create empty dictionary as fallback
-            self.benchmark_embeddings = {}
-        except Exception as e:
-            logger.error(f"Error loading benchmark embeddings: {e}")
-            self.benchmark_embeddings = {}
-
+    
     def identify_tasks(self, messages: List[ChatMessage]) -> Dict[str, float]:
         """
         Identify relevant tasks from user messages.
         Returns a dictionary mapping task categories to relevance scores.
         """
         # Extract the latest user message
-        user_messages = [msg.content for msg in messages if msg.role.lower() == "user"]
-        if not user_messages:
-            return {"general_knowledge": 1.0}
+        user_messages = [msg.content.lower() for msg in messages if msg.role == "user"]
         
         # Use the most recent message with more weight, but consider previous context
-        latest_msg = user_messages[-1].lower()
-        all_text = " ".join(user_messages).lower()
+        latest_msg = user_messages[-1]
+        all_text = " ".join(user_messages)
         
         # Initialize task scores
         task_scores = {task: 0.0 for task in TASK_TO_BENCHMARK_WEIGHTS.keys()}
@@ -453,6 +410,7 @@ class SmartRouter:
             similarities = {k: v/total for k, v in similarities.items()}
             
         return similarities
+    
     def get_top_user_models(self, query: str, k: int = 5, model_names=None, 
                        rel_cost: float = 0.5, rel_latency: float = 0.0, 
                        rel_accuracy: float = 0.5) -> dict:

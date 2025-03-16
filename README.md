@@ -49,3 +49,9 @@ The project offers the following core features in its implementation order:
   - Single payment for multiple models.
   - Simplified model switching.
   - Optimized performance and cost-efficiency.
+
+
+
+## Others
+
+- Create a clean pip requirements: `pip list --format=freeze > requirements.txt`

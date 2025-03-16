@@ -11,14 +11,9 @@ from openai import OpenAI
 import numpy as np
 from typing import Dict, Optional, List, Union
 import os
-import logging
 from pathlib import Path
 import json
 import time
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 class OpenAIEmbeddings:
     def __init__(self, 
@@ -49,7 +44,6 @@ class OpenAIEmbeddings:
         cache_path = Path(cache_dir) / f"embeddings_cache_{self.model.replace('-', '_')}.json"
         
         if not cache_path.exists():
-            logger.info(f"No cache file found at {cache_path}, starting with empty cache")
             return
             
         try:
@@ -58,10 +52,8 @@ class OpenAIEmbeddings:
                 # Convert lists back to numpy arrays
                 cached_data = json.load(f)
                 self.cache = {k: np.array(v) for k, v in cached_data.items()}
-            logger.info(f"Loaded {len(self.cache)} cached embeddings from {cache_path}")
         except Exception as e:
-            logger.error(f"Error loading cache: {e}")
-    
+            return
     def _save_cache(self) -> None:
         """Save cached embeddings to disk."""
         if not self.cache_dir:
@@ -77,9 +69,9 @@ class OpenAIEmbeddings:
             cache_data = {k: v.tolist() for k, v in self.cache.items()}
             with open(cache_path, 'w') as f:
                 json.dump(cache_data, f)
-            logger.info(f"Saved {len(self.cache)} embeddings to cache at {cache_path}")
+            return
         except Exception as e:
-            logger.error(f"Error saving cache: {e}")
+            return
     
     def encode(self, text: Union[str, List[str]]) -> Union[np.ndarray, List[np.ndarray]]:
         """
@@ -126,13 +118,10 @@ class OpenAIEmbeddings:
             except Exception as e:
                 retry += 1
                 wait_time = 2 ** retry  # Exponential backoff
-                logger.warning(f"Error generating embedding (attempt {retry}/{max_retries}): {e}")
                 
                 if retry < max_retries:
-                    logger.info(f"Retrying in {wait_time} seconds...")
                     time.sleep(wait_time)
                 else:
-                    logger.error(f"Failed to generate embedding after {max_retries} attempts")
                     # Return a zero vector as fallback
                     dims = 1536 if "ada" in self.model else 3072 if "3" in self.model else 1536
                     return np.zeros(dims)
@@ -189,7 +178,6 @@ class OpenAIEmbeddings:
             return results
             
         except Exception as e:
-            logger.error(f"Error in batch encoding: {e}")
             # Return zero vectors as fallback
             dims = 1536 if "ada" in self.model else 3072 if "3" in self.model else 1536
             zero_vector = np.zeros(dims)

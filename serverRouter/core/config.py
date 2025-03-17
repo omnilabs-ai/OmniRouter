@@ -2,7 +2,7 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-cred = credentials.Certificate('omnilabs-43460-firebase-adminsdk-fbsvc-71358ad780.json')
+cred = credentials.Certificate('firebase-credentials.json')
 app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 VALID_API_KEYS = set()

@@ -47,7 +47,8 @@ class OpenAIProvider(ChatProvider, ImageProvider):
                 provider="openai",
                 usage={
                     "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.prompt_tokens + response.usage.completion_tokens
                 }
             )
         except Exception as e:
@@ -66,11 +67,39 @@ class OpenAIProvider(ChatProvider, ImageProvider):
                 stream=True
             )
             
+            # Send initial metadata event with model information
+            metadata = {
+                "model": request.model,
+                "provider": "openai",
+                "event": "metadata"
+            }
+            yield f"event: metadata\ndata: {json.dumps(metadata)}\n\n"
+            
+            # Track token usage
+            completion_tokens = 0
+            
             async for chunk in stream:
                 if chunk.choices[0].delta.content is not None:
-                    # Format as proper SSE
+                    # Format as proper SSE with content
                     content = chunk.choices[0].delta.content
+                    completion_tokens += 1  # Approximate token count, replace with actual if available
                     yield f"data: {json.dumps({'content': content})}\n\n"
+            
+            # Calculate prompt tokens (approximate)
+            prompt_tokens = sum(len(msg.content.split()) for msg in request.messages)
+            total_tokens = prompt_tokens + completion_tokens
+            
+            # Send usage information at the end
+            usage_data = {
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens
+                },
+                "event": "usage"
+            }
+            
+            yield f"event: usage\ndata: {json.dumps(usage_data)}\n\n"
             
             # Signal end of stream
             yield "data: [DONE]\n\n"

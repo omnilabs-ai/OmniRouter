@@ -2,6 +2,8 @@ from typing import List, Optional, Dict, Literal, Union, Any, AsyncGenerator
 from pydantic import BaseModel, Field
 from enum import Enum
 from collections.abc import Mapping
+import time
+import uuid
 
 # Type alias for streaming responses
 ChatCompletionGenerator = AsyncGenerator[str, None]
@@ -144,4 +146,35 @@ class SmartRouterRequest(BaseModel):
     verbose: bool = Field(
         default=False, 
         description="Whether to return detailed explanation of the model selection process"
+    )
+
+class SmartRouterResponse(BaseModel):
+    """Response from the smart router model selection"""
+    selected_models: List[str] = Field(
+        ..., 
+        description="List of selected model IDs in order of preference"
+    )
+    model_details: Dict[str, Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Detailed information about each selected model"
+    )
+    explanation: Optional[str] = Field(
+        None,
+        description="Explanation of the model selection process (if verbose=True)"
+    )
+    identified_tasks: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Task types identified in the query with confidence scores"
+    )
+    benchmark_weights: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Weights applied to different benchmarks for this query"
+    )
+    query_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Unique identifier for this query (used for feedback)"
+    )
+    task_classifications: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Alias for identified_tasks to maintain compatibility with tests"
     )

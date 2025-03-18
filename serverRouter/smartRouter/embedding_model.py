@@ -11,6 +11,7 @@ from openai import OpenAI
 import numpy as np
 from typing import Dict, Optional, List, Union
 import os
+import logging
 from pathlib import Path
 import json
 import time
@@ -54,6 +55,7 @@ class OpenAIEmbeddings:
                 self.cache = {k: np.array(v) for k, v in cached_data.items()}
         except Exception as e:
             return
+    
     def _save_cache(self) -> None:
         """Save cached embeddings to disk."""
         if not self.cache_dir:
@@ -69,7 +71,6 @@ class OpenAIEmbeddings:
             cache_data = {k: v.tolist() for k, v in self.cache.items()}
             with open(cache_path, 'w') as f:
                 json.dump(cache_data, f)
-            return
         except Exception as e:
             return
     

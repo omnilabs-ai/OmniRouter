@@ -1,0 +1,88 @@
+{
+  "case_1_coding": {
+    "selection_time": 0.015834808349609375,
+    "selected_models": [
+      "gemini-2.0-pro",
+      "Qwen/Qwen2-VL-72B-Instruct",
+      "gpt-4o-mini"
+    ],
+    "task_classifications": {
+      "general_knowledge": 0.7255594817432273,
+      "creative_writing": 0.020730270906949354,
+      "coding": 0.4,
+      "math": 0.028268551236749116
+    },
+    "model_scores": null,
+    "model_responses": []
+  },
+  "case_2_math": {
+    "selection_time": 0.004861354827880859,
+    "selected_models": [
+      "gemini-2.0-pro",
+      "deepseek-v3",
+      "Qwen/Qwen2-VL-72B-Instruct"
+    ],
+    "task_classifications": {
+      "general_knowledge": 0.7490272373540856,
+      "math": 0.4
+    },
+    "model_scores": null,
+    "model_responses": []
+  },
+  "case_3_science": {
+    "selection_time": 0.007109165191650391,
+    "selected_models": [
+      "gemini-2.0-pro",
+      "Qwen/Qwen2-VL-72B-Instruct",
+      "deepseek-v3"
+    ],
+    "task_classifications": {
+      "general_knowledge": 0.8893093661305582,
+      "science": 0.4
+    },
+    "model_scores": null,
+    "model_responses": []
+  },
+  "case_4_reasoning": {
+    "selection_time": 0.008551597595214844,
+    "selected_models": [
+      "gemini-2.0-pro",
+      "Qwen/Qwen2-VL-72B-Instruct",
+      "deepseek-v3"
+    ],
+    "task_classifications": {
+      "general_knowledge": 0.6698564593301436,
+      "reasoning": 0.4
+    },
+    "model_scores": null,
+    "model_responses": []
+  },
+  "case_5_general_knowledge": {
+    "selection_time": 0.004262685775756836,
+    "selected_models": [
+      "gemini-2.0-pro",
+      "Qwen/Qwen2-VL-72B-Instruct",
+      "deepseek-v3"
+    ],
+    "task_classifications": {
+      "general_knowledge": 0.9784172661870503,
+      "coding": 0.021582733812949638
+    },
+    "model_scores": null,
+    "model_responses": []
+  },
+  "case_6_creative_writing": {
+    "selection_time": 0.0,
+    "selected_models": [
+      "Qwen/Qwen2-VL-72B-Instruct",
+      "gemini-2.0-pro",
+      "deepseek-v3"
+    ],
+    "task_classifications": {
+      "general_knowledge": 0.9459459459459459,
+      "creative_writing": 0.5
+    },
+    "model_scores": null,
+    "model_responses": []
+  }
+}

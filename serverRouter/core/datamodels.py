@@ -35,7 +35,7 @@ class ChatCompletionResponse(BaseModel):
     content: str = Field(..., description="Generated content")
     provider: str = Field(..., description="Provider that generated the response")
     usage: Dict[str, int] = Field(
-        default_factory=dict,
+        default_factory=lambda: {"total_tokens": 0},
         description="Token usage statistics"
     )
 

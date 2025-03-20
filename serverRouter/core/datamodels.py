@@ -2,9 +2,10 @@ from typing import List, Optional, Dict, Literal, Union, Any, AsyncGenerator
 from pydantic import BaseModel, Field
 from enum import Enum
 from collections.abc import Mapping
+from sse_starlette.sse import EventSourceResponse
 
 # Type alias for streaming responses
-ChatCompletionGenerator = AsyncGenerator[str, None]
+ChatCompletionGenerator = EventSourceResponse
 
 class ModelProvider(str, Enum):
     """Supported model providers"""

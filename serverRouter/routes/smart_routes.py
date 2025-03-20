@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from serverRouter.routes.utils import verify_api_key
 from serverRouter.core.datamodels import (
     ChatCompletionRequest,
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/v1", tags=["smart"])
 smart_router = SmartRouter()
 
 
-@router.post("/router/smart_select")
+@router.post("/smart_select")
 async def smart_select(
     request: SmartRouterRequest,
     api_key: str = Depends(verify_api_key)
@@ -39,7 +39,7 @@ async def smart_select(
     return response
     
 
-@router.post("/router/smart_select/stream")
+@router.post("/smart_select/stream")
 async def smart_select_stream(
     request: SmartRouterRequest,
     api_key: str = Depends(verify_api_key)

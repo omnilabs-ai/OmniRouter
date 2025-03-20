@@ -13,6 +13,7 @@ from serverRouter.core.datamodels import (
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
 import json
+from sse_starlette.sse import EventSourceResponse
 load_dotenv()
 
 class OpenAIProvider(ChatProvider, ImageProvider):
@@ -55,57 +56,56 @@ class OpenAIProvider(ChatProvider, ImageProvider):
             raise ProviderError(f"OpenAI API error: {str(e)}")
     
     async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
-        try:
-            stream = await self.client.chat.completions.create(
-                model=request.model,
-                messages=[
-                    {"role": msg.role, "content": msg.content}
-                    for msg in request.messages
-                ],
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                stream=True
-            )
-            
-            # Send initial metadata event with model information
-            metadata = {
-                "model": request.model,
-                "provider": "openai",
-                "event": "metadata"
-            }
-            yield f"event: metadata\ndata: {json.dumps(metadata)}\n\n"
-            
-            # Track token usage
-            completion_tokens = 0
-            
-            async for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    # Format as proper SSE with content
-                    content = chunk.choices[0].delta.content
-                    completion_tokens += 1  # Approximate token count, replace with actual if available
-                    yield f"data: {json.dumps({'content': content})}\n\n"
-            
-            # Calculate prompt tokens (approximate)
-            prompt_tokens = sum(len(msg.content.split()) for msg in request.messages)
-            total_tokens = prompt_tokens + completion_tokens
-            
-            # Send usage information at the end
-            usage_data = {
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens
-                },
-                "event": "usage"
-            }
-            
-            yield f"event: usage\ndata: {json.dumps(usage_data)}\n\n"
-            
-            # Signal end of stream
-            yield "data: [DONE]\n\n"
+        async def event_generator():
+            try:
+                stream = await self.client.chat.completions.create(
+                    model=request.model,
+                    messages=[
+                        {"role": msg.role, "content": msg.content}
+                        for msg in request.messages
+                    ],
+                    temperature=request.temperature,
+                    max_tokens=request.max_tokens,
+                    stream_options={"include_usage": True},
+                    stream=True
+                )
+                
+                yield {
+                    "event": "metadata",
+                    "data": {
+                        "model": request.model,
+                        "provider": "openai"
+                    }
+                }
+                
+                async for chunk in stream:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        choice = chunk.choices[0]
+                        if hasattr(choice.delta, 'content') and choice.delta.content is not None:
+                            yield {
+                                "event": "content",
+                                "data": {"content": choice.delta.content}
+                            }
                     
-        except Exception as e:
-            raise ProviderError(f"OpenAI API error during streaming: {str(e)}")
+                    elif hasattr(chunk, 'usage') and chunk.usage is not None:
+                        yield {
+                            "event": "usage",
+                            "data": {
+                                "prompt_tokens": chunk.usage.prompt_tokens,
+                                "completion_tokens": chunk.usage.completion_tokens,
+                                "total_tokens": chunk.usage.total_tokens
+                            }
+                        }
+                        
+            except Exception as e:
+                error_message = str(e)
+                yield {
+                    "event": "error",
+                    "data": {"error": error_message}
+                }
+                raise ProviderError(f"OpenAI API error during streaming: {error_message}")
+        
+        return EventSourceResponse(event_generator())
 
     async def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
         try:

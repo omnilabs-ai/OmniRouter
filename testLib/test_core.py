@@ -7,7 +7,7 @@ class BaseTest:
         self.client = TestClient(app)
         self.logger = test_logger
         self.client.headers = {
-            "Authorization": "Bearer test-sk1o83e"
+            "Authorization": "Bearer REDACTED-OMNI-API-KEY-2"
         }
 
 class TestBasicEndpoints(BaseTest):

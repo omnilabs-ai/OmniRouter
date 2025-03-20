@@ -11,6 +11,7 @@ from serverRouter.core.datamodels import (
 )
 from serverRouter.core.exceptions import ProviderError
 import json
+from sse_starlette.sse import EventSourceResponse
 
 class TogetherAIProvider(ChatProvider, ImageProvider):
     """
@@ -51,39 +52,65 @@ class TogetherAIProvider(ChatProvider, ImageProvider):
                 content=response.choices[0].message.content,
                 provider="together",
                 usage={
-                    "prompt_tokens": getattr(response.usage, "prompt_tokens", None),
-                    "completion_tokens": getattr(response.usage, "completion_tokens", None)
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
                 }
             )
         except Exception as e:
             raise ProviderError(f"Together AI API error: {str(e)}")
         
     async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
-        try:
-            messages = []
-            for msg in request.messages:
-                role = "model" if msg.role == "assistant" else msg.role
-                messages.append({"role": role, "parts": [msg.content]})
+        async def event_generator():
+            try:
+                # Send initial metadata event
+                yield {
+                    "event": "metadata", 
+                    "data": {
+                        "model": request.model,
+                        "provider": "together"
+                    }
+                }
+                
+                response = await asyncio.to_thread(
+                    self.client.chat.completions.create,
+                    model=request.model,
+                    messages=[{"role": msg.role, "content": msg.content} for msg in request.messages],
+                    temperature=request.temperature,
+                    max_tokens=request.max_tokens,
+                    stream=True
+                )
 
-            response = await asyncio.to_thread(
-                self.client.chat.completions.create,
-                model=request.model,
-                messages=[{"role": msg.role, "content": msg.content} for msg in request.messages],
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                stream=True
-            )
-
-            for chunk in response:
-                if chunk.choices[0].delta.content is not None:
-                    # Format as proper SSE
-                    content = chunk.choices[0].delta.content
-                    yield f"data: {json.dumps({'content': content})}\n\n"
-            
-            yield "data: [DONE]\n\n"
-            
-        except Exception as e:
-            raise ProviderError(f"Together AI API error (stream): {str(e)}")
+                total_completion_tokens = 0
+                
+                for chunk in response:
+                    print(chunk)
+                    if chunk.choices[0].delta.content is not None:
+                        content = chunk.choices[0].delta.content
+                        total_completion_tokens += 1
+                        yield {
+                            "event": "content",
+                            "data": {"content": content}
+                        }
+                    if chunk.usage is not None:
+                        yield {
+                            "event": "usage",
+                            "data": {"usage": {
+                                "prompt_tokens": chunk.usage.prompt_tokens,
+                                "completion_tokens": chunk.usage.completion_tokens,
+                                "total_tokens": chunk.usage.total_tokens
+                            }}
+                        }
+                
+            except Exception as e:
+                # Send error event in case of exception
+                yield {
+                    "event": "error",
+                    "data": {"error": str(e)}
+                }
+                raise ProviderError(f"Together AI API error (stream): {str(e)}")
+        
+        return EventSourceResponse(event_generator())
 
     async def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResponse:
         """

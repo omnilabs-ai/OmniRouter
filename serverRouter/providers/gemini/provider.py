@@ -12,6 +12,7 @@ from serverRouter.core.datamodels import (
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
 import json
+from sse_starlette.sse import EventSourceResponse
 
 load_dotenv()
 
@@ -46,7 +47,11 @@ class GeminiProvider(ChatProvider):
                     model=request.model,
                     content=response.text,
                     provider="gemini",
-                    usage={}  # Gemini doesn't directly provide usage stats
+                    usage={
+                        "prompt_tokens": response.usage_metadata.prompt_token_count,
+                        "completion_tokens": response.usage_metadata.candidates_token_count,
+                        "total_tokens": response.usage_metadata.prompt_token_count + response.usage_metadata.candidates_token_count
+                    }
                 )
             else:
                 raise ProviderError("Empty response from Gemini API")
@@ -55,30 +60,62 @@ class GeminiProvider(ChatProvider):
             raise ProviderError(f"Gemini API error (chat): {str(e)}")
         
     async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
-        try:
-            messages = []
-            for msg in request.messages:
-                role = "model" if msg.role == "assistant" else msg.role
-                messages.append({"role": role, "parts": [msg.content]})
+        async def event_generator():
+            try:
+                messages = []
+                for msg in request.messages:
+                    role = "model" if msg.role == "assistant" else msg.role
+                    messages.append({"role": role, "parts": [msg.content]})
 
-            model = genai.GenerativeModel(model_name=request.model)
-            
-            response = model.generate_content(
-                contents=messages,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=request.max_tokens or 2048,
-                    temperature=request.temperature or 1.0
-                ),
-                stream=True
-            )
-            
-            for chunk in response:
-                if chunk.text:
-                    yield f"data: {json.dumps({'content': chunk.text})}\n\n"
-            
-            yield "data: [DONE]\n\n"
-            
-        except Exception as e:
-            raise ProviderError(f"Gemini API error (stream): {str(e)}")
+                model = genai.GenerativeModel(model_name=request.model)
+                
+                # Send metadata event at the beginning
+                yield {
+                    "event": "metadata",
+                    "data": {
+                        "model": request.model,
+                        "provider": "gemini"
+                    }
+                }
+                
+                response = model.generate_content(
+                    contents=messages,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=request.max_tokens or 2048,
+                        temperature=request.temperature or 1.0
+                    ),
+                    stream=True
+                )
+                
+                total_prompt_tokens = 0
+                total_completion_tokens = 0
+
+                for chunk in response:
+                    if chunk.text:
+                        total_prompt_tokens = chunk.usage_metadata.prompt_token_count
+                        total_completion_tokens = chunk.usage_metadata.candidates_token_count
+                        yield {
+                            "event": "content",
+                            "data": {"content": chunk.text}
+                        }
+
+                yield {
+                    "event": "usage",
+                    "data": {
+                        "prompt_tokens": total_prompt_tokens,
+                        "completion_tokens": total_completion_tokens,
+                        "total_tokens": total_prompt_tokens + total_completion_tokens
+                    }
+                }
+                
+            except Exception as e:
+                error_message = str(e)
+                yield {
+                    "event": "error",
+                    "data": {"error": error_message}
+                }
+                raise ProviderError(f"Gemini API error (stream): {str(e)}")
+        
+        return EventSourceResponse(event_generator())
         
         

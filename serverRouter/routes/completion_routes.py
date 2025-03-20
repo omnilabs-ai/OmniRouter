@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Security, Depends
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends
 from serverRouter.routes.utils import *
 from serverRouter.core.datamodels import (
     ChatCompletionRequest,
@@ -8,7 +7,7 @@ from serverRouter.core.datamodels import (
     ImageGenerationResponse,
 )
 from serverRouter.core.models import CHAT_MODELS, IMAGE_MODELS
-import json
+from sse_starlette.sse import EventSourceResponse
 
 router = APIRouter(prefix="/v1", tags=["completions"])
 
@@ -30,28 +29,26 @@ async def create_chat_completion(
 async def create_chat_completion_stream(
     request: ChatCompletionRequest,
     api_key: str = Depends(verify_api_key)
-) -> StreamingResponse:
+):
     """Create a chat completion using the specified model."""
     model_name, provider = get_model_and_provider(request.model, CHAT_MODELS)
     request.model = model_name
     user_id = get_user_id_by_api_key(api_key)
-    async def usage_tracking_wrapper():
-        async for chunk in provider.chat_complete_stream(request):
-            yield chunk
-            if "event: usage" in chunk:
-                data_part = chunk.split("data: ")[1].strip()
-                if data_part:
-                    usage_data = json.loads(data_part)
-                    if "usage" in usage_data:
-                        token_count = usage_data["usage"].get('total_tokens', 0)
-                        print(f"Token count: {token_count}")
-                        add_usage_to_user(user_id, token_count)
-
-    return StreamingResponse(
-        usage_tracking_wrapper(),
-        media_type="text/event-stream",
-    )
     
+    response = await provider.chat_complete_stream(request)
+
+    async def usage_tracking_generator():
+        async for chunk in response.body_iterator:
+            yield chunk
+            if isinstance(chunk, dict) and chunk.get("event") == "usage":
+                usage_data = chunk.get("data", {})
+                if isinstance(usage_data, dict) and "usage" in usage_data:
+                    total_tokens = usage_data["usage"].get("total_tokens", 0)
+                    add_usage_to_user(user_id, total_tokens)
+    
+    return EventSourceResponse(usage_tracking_generator())
+    
+
 @router.post("/images/generate")
 async def create_image(
     request: ImageGenerationRequest,

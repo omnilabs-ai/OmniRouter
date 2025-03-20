@@ -5,6 +5,7 @@ from serverRouter.core.datamodels import ChatCompletionRequest, ChatCompletionRe
 from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
 import json
+from sse_starlette.sse import EventSourceResponse
 
 load_dotenv()
 
@@ -47,7 +48,8 @@ class AnthropicProvider(ChatProvider):
                 provider="anthropic",
                 usage={
                     "input_tokens": response.usage.input_tokens,
-                    "output_tokens": response.usage.output_tokens
+                    "output_tokens": response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens
                 }
 
             )
@@ -57,23 +59,53 @@ class AnthropicProvider(ChatProvider):
         except Exception as e:
             raise ProviderError(f"Unexpected error: {str(e)}")
     
-    async def chat_complete_stream(self, request: ChatCompletionRequest) -> ChatCompletionGenerator:
-        try:
-            async with self.client.messages.stream(
-                model=request.model,
-                messages=[
-                    {"role": msg.role, "content": msg.content}
-                    for msg in request.messages
-                ],
-                max_tokens=request.max_tokens or 4092,
-                temperature=request.temperature or 1.0
-            ) as stream:
-                async for chunk in stream.text_stream:
-                    yield f"data: {json.dumps({'content': chunk})}\n\n"
+    async def chat_complete_stream(self, request: ChatCompletionRequest) -> EventSourceResponse:
+        async def event_generator():
+            try:
+                # Send initial metadata event
+                yield {
+                    "event": "metadata", 
+                    "data": {
+                        "model": request.model,
+                        "provider": "anthropic"
+                    }
+                }
                 
-            yield "data: [DONE]\n\n"
-
-        except Exception as e:
-            raise ProviderError(f"Unexpected error: {str(e)}")
+                async with self.client.messages.stream(
+                    model=request.model,
+                    messages=[
+                        {"role": msg.role, "content": msg.content}
+                        for msg in request.messages
+                    ],
+                    max_tokens=request.max_tokens or 4092,
+                    temperature=request.temperature or 1.0
+                ) as stream:
+                    async for chunk in stream:
+                        if chunk.type == "text":
+                            yield {
+                                "event": "content",
+                                "data": {"content": chunk.text}
+                            }
+                        elif chunk.type == "message_stop":
+                            yield {
+                                "event": "usage",
+                                "data": {
+                                    "usage": {
+                                        "input_tokens": chunk.message.usage.input_tokens,
+                                        "output_tokens": chunk.message.usage.output_tokens,
+                                        "total_tokens": chunk.message.usage.input_tokens + chunk.message.usage.output_tokens
+                                    }
+                                }
+                            }
+                            
+            except Exception as e:
+                error_message = str(e)
+                yield {
+                    "event": "error",
+                    "data": {"error": error_message}
+                }
+                raise ProviderError(f"Unexpected error: {str(e)}")
+        
+        return EventSourceResponse(event_generator())
 
 

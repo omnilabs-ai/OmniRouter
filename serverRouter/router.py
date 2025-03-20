@@ -30,7 +30,7 @@ def initialize_providers():
             ModelProvider.OPENAI: OpenAIProvider(),
             ModelProvider.ANTHROPIC: AnthropicProvider(),
             ModelProvider.GEMINI: GeminiProvider(),
-            ModelProvider.DEEPSEEK: DeepSeekProvider(),
+            # ModelProvider.DEEPSEEK: DeepSeekProvider(), # NOT Fast Enough, using together instead
             ModelProvider.TOGETHER: TogetherAIProvider(),
             ModelProvider.STABLEDIFFUSION: StableDiffusionProvider()
         })

@@ -65,10 +65,10 @@ class AnthropicProvider(ChatProvider):
                 # Send initial metadata event
                 yield {
                     "event": "metadata", 
-                    "data": {
+                    "data": json.dumps({
                         "model": request.model,
                         "provider": "anthropic"
-                    }
+                    })
                 }
                 
                 async with self.client.messages.stream(
@@ -84,23 +84,23 @@ class AnthropicProvider(ChatProvider):
                         if chunk.type == "text":
                             yield {
                                 "event": "content",
-                                "data": {"content": chunk.text}
+                                "data": json.dumps({"content": chunk.text})
                             }
                         elif chunk.type == "message_stop":
                             yield {
                                 "event": "usage",
-                                "data": {
+                                "data": json.dumps({
                                     "input_tokens": chunk.message.usage.input_tokens,
                                     "output_tokens": chunk.message.usage.output_tokens,
                                     "total_tokens": chunk.message.usage.input_tokens + chunk.message.usage.output_tokens
-                                }
+                                })
                             }
                             
             except Exception as e:
                 error_message = str(e)
                 yield {
                     "event": "error",
-                    "data": {"error": error_message}
+                    "data": json.dumps({"error": error_message})
                 }
                 raise ProviderError(f"Unexpected error: {str(e)}")
         

@@ -90,11 +90,9 @@ class AnthropicProvider(ChatProvider):
                             yield {
                                 "event": "usage",
                                 "data": {
-                                    "usage": {
-                                        "input_tokens": chunk.message.usage.input_tokens,
-                                        "output_tokens": chunk.message.usage.output_tokens,
-                                        "total_tokens": chunk.message.usage.input_tokens + chunk.message.usage.output_tokens
-                                    }
+                                    "input_tokens": chunk.message.usage.input_tokens,
+                                    "output_tokens": chunk.message.usage.output_tokens,
+                                    "total_tokens": chunk.message.usage.input_tokens + chunk.message.usage.output_tokens
                                 }
                             }
                             

@@ -66,10 +66,10 @@ class TogetherAIProvider(ChatProvider, ImageProvider):
                 # Send initial metadata event
                 yield {
                     "event": "metadata", 
-                    "data": {
+                    "data": json.dumps({
                         "model": request.model,
                         "provider": "together"
-                    }
+                    })
                 }
                 
                 response = await asyncio.to_thread(
@@ -90,23 +90,23 @@ class TogetherAIProvider(ChatProvider, ImageProvider):
                         total_completion_tokens += 1
                         yield {
                             "event": "content",
-                            "data": {"content": content}
+                            "data": json.dumps({"content": content})
                         }
                     if chunk.usage is not None:
                         yield {
                             "event": "usage",
-                            "data": {
+                            "data": json.dumps({
                                 "prompt_tokens": chunk.usage.prompt_tokens,
                                 "completion_tokens": chunk.usage.completion_tokens,
                                 "total_tokens": chunk.usage.total_tokens
-                            }
+                            })
                         }
                 
             except Exception as e:
                 # Send error event in case of exception
                 yield {
                     "event": "error",
-                    "data": {"error": str(e)}
+                    "data": json.dumps({"error": str(e)})
                 }
                 raise ProviderError(f"Together AI API error (stream): {str(e)}")
         

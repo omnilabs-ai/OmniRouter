@@ -72,10 +72,10 @@ class OpenAIProvider(ChatProvider, ImageProvider):
                 
                 yield {
                     "event": "metadata",
-                    "data": {
+                    "data": json.dumps({
                         "model": request.model,
                         "provider": "openai"
-                    }
+                    })
                 }
                 
                 async for chunk in stream:
@@ -84,24 +84,24 @@ class OpenAIProvider(ChatProvider, ImageProvider):
                         if hasattr(choice.delta, 'content') and choice.delta.content is not None:
                             yield {
                                 "event": "content",
-                                "data": {"content": choice.delta.content}
+                                "data": json.dumps({"content": choice.delta.content})
                             }
                     
                     elif hasattr(chunk, 'usage') and chunk.usage is not None:
                         yield {
                             "event": "usage",
-                            "data": {
+                            "data": json.dumps({
                                 "prompt_tokens": chunk.usage.prompt_tokens,
                                 "completion_tokens": chunk.usage.completion_tokens,
                                 "total_tokens": chunk.usage.total_tokens
-                            }
+                            })
                         }
                         
             except Exception as e:
                 error_message = str(e)
                 yield {
                     "event": "error",
-                    "data": {"error": error_message}
+                    "data": json.dumps({"error": error_message})
                 }
                 raise ProviderError(f"OpenAI API error during streaming: {error_message}")
         

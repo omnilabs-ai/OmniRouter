@@ -1,3 +1,12 @@
+"""
+
+!IMPORTANT!
+DEPRECATED: using together instead
+
+
+"""
+
+
 from typing import Dict, Any, List, Optional
 from openai import AsyncOpenAI
 from serverRouter.core.interfaces import ChatProvider

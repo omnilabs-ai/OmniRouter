@@ -72,10 +72,10 @@ class GeminiProvider(ChatProvider):
                 # Send metadata event at the beginning
                 yield {
                     "event": "metadata",
-                    "data": {
+                    "data": json.dumps({
                         "model": request.model,
                         "provider": "gemini"
-                    }
+                    })
                 }
                 
                 response = model.generate_content(
@@ -96,23 +96,23 @@ class GeminiProvider(ChatProvider):
                         total_completion_tokens = chunk.usage_metadata.candidates_token_count
                         yield {
                             "event": "content",
-                            "data": {"content": chunk.text}
+                            "data": json.dumps({"content": chunk.text})
                         }
 
                 yield {
                     "event": "usage",
-                    "data": {
+                    "data": json.dumps({
                         "prompt_tokens": total_prompt_tokens,
                         "completion_tokens": total_completion_tokens,
                         "total_tokens": total_prompt_tokens + total_completion_tokens
-                    }
+                    })
                 }
                 
             except Exception as e:
                 error_message = str(e)
                 yield {
                     "event": "error",
-                    "data": {"error": error_message}
+                    "data": json.dumps({"error": error_message})
                 }
                 raise ProviderError(f"Gemini API error (stream): {str(e)}")
         

@@ -107,12 +107,6 @@ class ModelInfo(BaseModel):
         default=None,
         description="Average latency in seconds per request"
     )
-
-class SmartRouterRequest(BaseModel):
-    query: str = Field(..., description="The user query to be routed")
-    max_latency: str = Field(..., description="Maximum latency preference (LIGHTNING, FAST, BALANCED, PERFORMANCE)")
-    max_cost: str = Field(..., description="Maximum cost preference (CHEAP, BALANCED, PREMIUM, PERFORMANCE)")
-    model_list: list = Field(..., description="List of models to consider (optional)")
     
 class SmartRouterRequest(BaseModel):
     messages: list[ChatMessage] = Field(..., description="List of chat messages")

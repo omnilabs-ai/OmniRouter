@@ -8,6 +8,7 @@ from serverRouter.core.datamodels import (
 )
 from serverRouter.core.models import CHAT_MODELS, IMAGE_MODELS
 from sse_starlette.sse import EventSourceResponse
+import json
 
 router = APIRouter(prefix="/v1", tags=["completions"])
 
@@ -41,7 +42,7 @@ async def create_chat_completion_stream(
         async for chunk in response.body_iterator:
             yield chunk
             if chunk.get("event") == "usage":
-                usage_data = chunk.get("data", {})
+                usage_data = json.loads(chunk.get("data", {}))
                 total_tokens = usage_data.get("total_tokens", 0)
                 add_usage_to_user(user_id, total_tokens)
     

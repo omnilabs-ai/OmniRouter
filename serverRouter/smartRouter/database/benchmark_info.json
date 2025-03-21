@@ -1,0 +1,44 @@
+{
+    "MMLU": {
+        "name": "Measuring Massive Multitask Language Understanding",
+        "description": "A comprehensive benchmark consisting of approximately 16,000 multiple-choice questions spanning 57 academic subjects including mathematics, philosophy, law, medicine, and computer science.",
+        "purpose": "To evaluate an AI model's breadth of understanding across diverse academic and professional fields in zero-shot and few-shot settings.",
+        "format": "Multiple-choice questions across various subjects, typically evaluated in zero-shot and few-shot settings.",
+        "significance": "Widely adopted standard for assessing LLM capabilities, with over 100 million downloads reported as of July 2024. Provides a standardized way to measure progress in LLM development across a broad range of knowledge domains."
+    },
+    "GPQA": {
+        "name": "Graduate-level Google-proof Q&A",
+        "description": "A higher difficulty benchmark focused on specialized domain knowledge in subjects like biology, physics, and chemistry, consisting of 448 complex questions.",
+        "purpose": "To assess how well language models handle complex, domain-specific questions that require expert-level reasoning rather than simple fact retrieval.",
+        "format": "Challenging questions across biology, physics, and chemistry domains that cannot be answered through simple internet searches.",
+        "significance": "Important for evaluating frontier models' specialized knowledge and reasoning abilities. Even top models still have room for improvement, with current leaders achieving around 60% accuracy compared to human expert average of 65%."
+    },
+    "HumanEval": {
+        "name": "Human Evaluation",
+        "description": "A benchmark consisting of 164 hand-crafted programming challenges comparable to simple software interview questions.",
+        "purpose": "To evaluate how well language models can generate working code that solves specific programming problems.",
+        "format": "Programming tasks where generated code is executed against unit tests to verify functionality. Typically evaluated multiple times to calculate the pass@k metric.",
+        "significance": "Standard for comparing coding capabilities of different LLMs. Provides clear, objective measurements of code generation abilities that directly translate to practical applications."
+    },
+    "GSM8K": {
+        "name": "Grade School Math 8K",
+        "description": "A dataset of 8,500 high-quality, linguistically diverse grade school math word problems requiring multi-step reasoning.",
+        "purpose": "To assess a model's ability to decompose problems, apply appropriate mathematical operations, and follow a chain of logical steps in solving math problems.",
+        "format": "7,500 training problems and 1,000 test problems, each requiring 2-8 steps to solve using basic arithmetic operations.",
+        "significance": "Crucial benchmark for evaluating mathematical reasoning capabilities in LLMs. Performance often indicative of a model's general reasoning abilities and frequently cited in technical reports for new model releases."
+    },
+    "BFCL": {
+        "name": "Berkeley Function-Calling Leaderboard",
+        "description": "A comprehensive and executable function call evaluation consisting of thousands of question-function-answer pairs across multiple programming languages and application domains.",
+        "purpose": "To evaluate how accurately LLMs can call functions and tools, assessing their ability to select appropriate functions, provide proper parameters, and invoke them in the right context.",
+        "format": "Diverse categories and languages (Python, Java, JavaScript, REST API, SQL) with scenarios including simple function calls, multiple function selection, parallel function calls, and multi-turn interactions.",
+        "significance": "Provides a standardized way to evaluate the critical ability of LLMs to interact with external tools and APIs through function calling, which is increasingly essential for integrating AI models into applications and software."
+    },
+    "MGSM": {
+        "name": "Multilingual Grade School Math",
+        "description": "A benchmark consisting of 250 grade-school math problems from the GSM8K dataset, each translated by human annotators into 10 diverse languages.",
+        "purpose": "To evaluate the reasoning abilities of large language models in multilingual settings, testing whether models can maintain reasoning capabilities across language boundaries.",
+        "format": "Translations of 250 problems into 10 languages: Spanish, French, German, Russian, Chinese, Japanese, Thai, Swahili, Bengali, and Telugu. Evaluated using chain-of-thought prompting.",
+        "significance": "Provides valuable insights into how well language models can perform complex reasoning tasks across different languages, testing both multilingual capabilities and mathematical problem-solving skills."
+    }
+}

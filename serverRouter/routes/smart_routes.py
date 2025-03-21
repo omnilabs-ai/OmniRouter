@@ -7,59 +7,21 @@ from serverRouter.core.datamodels import (
 )
 
 from serverRouter.routes.completion_routes import create_chat_completion, create_chat_completion_stream
-from serverRouter.smartRouter.SmartRouter import SmartRouter
+from serverRouter.smartRouter.main import SmartRouter
+from sse_starlette.sse import EventSourceResponse
 
 router = APIRouter(prefix="/v1", tags=["smart"])
 
-smart_router = SmartRouter()
+@router.post("/smartRouterStream")
+async def smartRouterStream(request: SmartRouterRequest):
+    return EventSourceResponse(SmartRouter(request.messages, request.max_latency, request.max_cost, request.model_list))
 
+@router.post("/smartRouter")
+async def smartRouter(request: SmartRouterRequest):
+    response_generator = SmartRouter(request.messages, request.max_latency, request.max_cost, request.model_list)
 
-@router.post("/smart_select")
-async def smart_select(
-    request: SmartRouterRequest,
-    api_key: str = Depends(verify_api_key)
-) -> ChatCompletionResponse:
-    """Get model recommendations based on the query and preferences."""
-    result = smart_router.get_top_user_models(
-        query=request.messages[-1].content,
-        k=request.k,
-        model_names=request.model_names,
-        rel_cost=request.rel_cost,
-        rel_latency=request.rel_latency,
-        rel_accuracy=request.rel_accuracy
-    )
-
-    response = await create_chat_completion(
-        request=ChatCompletionRequest(
-            model=result["model"],
-            messages=request.messages,
-        )
-    )
-
-    return response
+    for event in response_generator:
+        if event["event"] == "return":
+            return event["data"]
     
-
-@router.post("/smart_select/stream")
-async def smart_select_stream(
-    request: SmartRouterRequest,
-    api_key: str = Depends(verify_api_key)
-) -> ChatCompletionResponse:
-    """Get model recommendations based on the query and preferences."""
-
-    result = smart_router.get_top_user_models(
-        query=request.messages[-1].content,
-        k=request.k,
-        model_names=request.model_names,
-        rel_cost=request.rel_cost,
-        rel_latency=request.rel_latency,
-        rel_accuracy=request.rel_accuracy
-    )
-
-    response = await create_chat_completion_stream(
-        request=ChatCompletionRequest(
-            model=result["model"],
-            messages=request.messages,
-        )
-    )
-
-    return response
+    return {"error": "No valid response found"}

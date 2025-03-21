@@ -109,40 +109,13 @@ class ModelInfo(BaseModel):
     )
 
 class SmartRouterRequest(BaseModel):
-    """Input parameters for smart router model selection"""
-    messages: List[ChatMessage] = Field(
-        ..., 
-        description="The chat messages to analyze for model selection"
-    )
-    k: int = Field(
-        default=5, 
-        ge=1, 
-        le=10, 
-        description="Number of top models to consider"
-    )
-    model_names: Optional[List[str]] = Field(
-        default=None, 
-        description="Optional list of specific models to select from. If None, all available models are considered"
-    )
-    rel_cost: float = Field(
-        default=0.5, 
-        ge=0.0, 
-        le=1.0, 
-        description="Relative importance of cost optimization (0-1)"
-    )
-    rel_latency: float = Field(
-        default=0.0, 
-        ge=0.0, 
-        le=1.0, 
-        description="Relative importance of latency optimization (0-1)"
-    )
-    rel_accuracy: float = Field(
-        default=0.5, 
-        ge=0.0, 
-        le=1.0, 
-        description="Relative importance of accuracy optimization (0-1)"
-    )
-    verbose: bool = Field(
-        default=False, 
-        description="Whether to return detailed explanation of the model selection process"
-    )
+    query: str = Field(..., description="The user query to be routed")
+    max_latency: str = Field(..., description="Maximum latency preference (LIGHTNING, FAST, BALANCED, PERFORMANCE)")
+    max_cost: str = Field(..., description="Maximum cost preference (CHEAP, BALANCED, PREMIUM, PERFORMANCE)")
+    model_list: list = Field(..., description="List of models to consider (optional)")
+    
+class SmartRouterRequest(BaseModel):
+    messages: list[ChatMessage] = Field(..., description="List of chat messages")
+    max_latency: str = Field(..., description="Maximum latency preference (LIGHTNING, FAST, BALANCED, PERFORMANCE)")
+    max_cost: str = Field(..., description="Maximum cost preference (CHEAP, BALANCED, PREMIUM, PERFORMANCE)")
+    model_list: list = Field(..., description="List of models to consider (optional)")

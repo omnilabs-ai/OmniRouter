@@ -1,0 +1,74 @@
+{
+    "general_knowledge": {
+        "description": "General knowledge includes broad, commonly known facts spanning history, geography, culture, politics, entertainment, and more. This category covers trivia, famous events, significant figures, world capitals, languages, and everyday facts. Questions related to common wisdom, societal norms, historical timelines, or well-known information fall under this category. It also includes queries that require a basic understanding of widely accepted facts rather than specialized expertise.",
+        "example_queries": [
+            "Who was the first president of the United States?",
+            "What is the capital of France?",
+            "What are some interesting facts about black holes?"
+        ],
+        "keywords": [
+            "what", "who", "where", "when", "why", "how", "explain", "define", "describe", 
+            "tell me about", "information", "can you help", "question"
+        ]
+    },
+    "coding": {
+        "description": "Coding includes topics related to programming languages, algorithms, data structures, debugging, software development, frameworks, and best practices. This category covers syntax, code snippets, performance optimization, bug fixing, and technical software questions. Any discussion involving writing, understanding, or improving code falls here.",
+        "example_queries": [
+            "How do I reverse a linked list in Python?",
+            "What is the time complexity of quicksort?",
+            "How can I set up a React project with TypeScript?"
+        ],
+        "keywords": [
+            "code", "function", "program", "algorithm", "implement", "develop", "debug",
+            "python", "javascript", "java", "c++", "html", "css", "api", "frontend", "backend"
+        ]
+    },
+    "math": {
+        "description": "Math includes arithmetic, algebra, calculus, geometry, probability, statistics, and logic-based numerical problem-solving. This category also includes mathematical proofs, formulas, equations, and applied mathematics in various fields.",
+        "example_queries": [
+            "What is the integral of sin(x)?",
+            "How do you calculate standard deviation?",
+            "What is the Pythagorean theorem used for?"
+        ],
+        "keywords": [
+            "math", "calculate", "solve", "equation", "formula", "algebra", "calculus",
+            "geometry", "statistics", "probability", "arithmetic"
+        ]
+    },
+    "translation": {
+        "description": "Translation covers converting text from one language to another while maintaining meaning, context, and grammar. This category includes word definitions, phrase translations, multilingual interpretation, and language structure comparisons.",
+        "example_queries": [
+            "How do you say 'good morning' in French?",
+            "What is the Spanish translation of 'computer'?",
+            "Translate this sentence from Japanese to English."
+        ],
+        "keywords": [
+            "translate", "conversion", "convert", "language", "english", "spanish", "french",
+            "german", "chinese", "japanese", "korean", "russian", "arabic"
+        ]
+    },
+    "science": {
+        "description": "Science includes physics, chemistry, biology, astronomy, and other scientific disciplines that study natural phenomena. This category also covers scientific theories, concepts, principles, and applied sciences such as engineering and medicine.",
+        "example_queries": [
+            "What is Newton's second law?",
+            "How does photosynthesis work?",
+            "Why does ice float on water?"
+        ],
+        "keywords": [
+            "physics", "chemistry", "biology", "science", "scientific", "experiment",
+            "theory", "hypothesis", "research", "technology", "medical", "engineering"
+        ]
+    },
+    "reasoning": {
+        "description": "Reasoning involves logic, critical thinking, problem-solving, and abstract thought processes. This category includes philosophical inquiries, puzzles, riddles, ethical dilemmas, and analytical thinking.",
+        "example_queries": [
+            "If all men are mortal, and Socrates is a man, is Socrates mortal?",
+            "What is the best way to approach a logical deduction puzzle?",
+            "Why is the sky blue from a logical perspective?"
+        ],
+        "keywords": [
+            "reason", "logic", "analyze", "evaluate", "assess", "deduce", "infer",
+            "think through", "rationale", "critical thinking", "argument", "premise"
+        ]
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "general_knowledge": {
+        "MMLU": 1.0
+    },
+    "coding": {
+        "HumanEval": 1.0
+    },
+    "math": {
+        "GSM8K": 0.8,
+        "MGSM": 0.2
+    },
+    "translation": {
+        "MGSM": 1.0
+    },
+    "science": {
+        "GPQA": 0.7,
+        "MMLU": 0.3
+    },
+    "reasoning": {
+        "GPQA": 0.3,
+        "GSM8K": 0.4,
+        "BFCL": 0.2,
+        "MGSM": 0.1
+    }
+}

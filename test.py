@@ -9,9 +9,9 @@ url = "http://localhost:8000/v1/chat/completions/stream"
 
 # Prepare the request payload
 payload = {
-    "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+    "model": "gpt-4o-mini",
     "messages": [
-        {"role": "user", "content": "Hello"}
+        {"role": "user", "content": "Write a short story about a cat"}
     ],
     "temperature": 0.7,
     "max_tokens": 100,

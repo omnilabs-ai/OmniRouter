@@ -95,11 +95,11 @@ class TogetherAIProvider(ChatProvider, ImageProvider):
                     if chunk.usage is not None:
                         yield {
                             "event": "usage",
-                            "data": {"usage": {
+                            "data": {
                                 "prompt_tokens": chunk.usage.prompt_tokens,
                                 "completion_tokens": chunk.usage.completion_tokens,
                                 "total_tokens": chunk.usage.total_tokens
-                            }}
+                            }
                         }
                 
             except Exception as e:

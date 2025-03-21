@@ -123,8 +123,8 @@ CHAT_MODELS = {
         latency=1.22  
     ),
     "deepseek-v3": ModelInfo(
-        name="deepseek-chat",
-        provider=ModelProvider.DEEPSEEK,
+        name="deepseek-ai/DeepSeek-V3",
+        provider=ModelProvider.TOGETHER,
         description=(
             "DeepSeek Chat is an open‑source conversational model known for cost‑effective, high‐quality dialogue. "
             "Strengths: Excellent general conversation and Q&A. Likely better at general coding assistance (e.g., full-stack development, modern frameworks like React or TensorFlow) and explaining concepts in simpler terms. "
@@ -142,8 +142,8 @@ CHAT_MODELS = {
         latency=7.31 
     ),
     "deepseek-r1": ModelInfo(
-        name="deepseek-reasoner",
-        provider=ModelProvider.DEEPSEEK,
+        name="deepseek-ai/DeepSeek-R1",
+        provider=ModelProvider.TOGETHER,
         description=(
             "DeepSeek Reasoner (R1) is specialized for in-depth logical reasoning and multi-step problem solving. "
             "Strengths: Exceptional reasoning and math problem-solving; competitive with top-tier models on complex tasks. Might handle niche technical tasks (e.g., debugging legacy code, solving complex math problems) with higher precision if trained on domain-specific data. "

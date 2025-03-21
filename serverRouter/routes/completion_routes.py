@@ -40,11 +40,10 @@ async def create_chat_completion_stream(
     async def usage_tracking_generator():
         async for chunk in response.body_iterator:
             yield chunk
-            if isinstance(chunk, dict) and chunk.get("event") == "usage":
+            if chunk.get("event") == "usage":
                 usage_data = chunk.get("data", {})
-                if isinstance(usage_data, dict) and "usage" in usage_data:
-                    total_tokens = usage_data["usage"].get("total_tokens", 0)
-                    add_usage_to_user(user_id, total_tokens)
+                total_tokens = usage_data.get("total_tokens", 0)
+                add_usage_to_user(user_id, total_tokens)
     
     return EventSourceResponse(usage_tracking_generator())
     

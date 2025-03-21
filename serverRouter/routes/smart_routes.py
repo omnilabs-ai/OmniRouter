@@ -13,11 +13,11 @@ from sse_starlette.sse import EventSourceResponse
 router = APIRouter(prefix="/v1", tags=["smart"])
 
 @router.post("/smartRouterStream")
-async def smartRouterStream(request: SmartRouterRequest):
+async def smartRouterStream(request: SmartRouterRequest, api_key: str = Depends(verify_api_key)):
     return EventSourceResponse(SmartRouter(request.messages, request.max_latency, request.max_cost, request.model_list))
 
 @router.post("/smartRouter")
-async def smartRouter(request: SmartRouterRequest):
+async def smartRouter(request: SmartRouterRequest, api_key: str = Depends(verify_api_key)):
     response_generator = SmartRouter(request.messages, request.max_latency, request.max_cost, request.model_list)
 
     for event in response_generator:

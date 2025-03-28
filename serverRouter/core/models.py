@@ -114,18 +114,16 @@ CHAT_MODELS = {
         ),
         max_tokens=8192,
         benchmarks={
-            "MMLU": 0.887,
-            "GPQA": 0.788,
-            "HumanEval": 0.932,
-            "MATH": 0.962,
-            "BFCL": 0.902,
-            "MGSM": 0.916
+            "MMLU": 0.800,
+            "GPQA": 0.660,
+            "HumanEval": 0.950,
+            "MATH": 0.850
         },
         tokenCost=15.0,  # Output cost per million tokens ($15.00), input is $3.00 per MTok
         latency=0.80  # Estimated based on "Fast" classification
     ),
     "claude-3-7-sonnet-extended-thinking": ModelInfo(
-        name="claude-3-7-sonnet-20250219-extended",
+        name="claude-3-7-sonnet-20250219",
         provider=ModelProvider.ANTHROPIC,
         description=(
             "Claude 3.7 Sonnet with extended thinking enabled for in-depth reasoning. "
@@ -137,15 +135,16 @@ CHAT_MODELS = {
         ),
         max_tokens=64000,
         benchmarks={
-            "MMLU": 0.902,
-            "GPQA": 0.848,
-            "HumanEval": 0.963,
-            "MATH": 0.997,
-            "BFCL": 0.925,
-            "MGSM": 0.940
+            "MMLU": 0.840,
+            "GPQA": 0.770,
+            "HumanEval": 0.980,
+            "MATH": 0.950
         },
         tokenCost=15.0,  # All extended thinking tokens billed as output tokens ($15.00 per MTok)
-        latency=1.60  # Higher latency due to extended reasoning process
+        latency=1.60,  # Higher latency due to extended reasoning process
+        extended_thinking=True,  # Flag to enable extended thinking mode
+        thinking_threshold=0.5,  # Default thinking threshold value
+        thinking_budget=20000   # Default thinking budget (in tokens)
     ),
     "claude-3-5-haiku": ModelInfo(
         name="claude-3-5-haiku-20241022",

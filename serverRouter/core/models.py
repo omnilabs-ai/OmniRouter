@@ -87,7 +87,7 @@ CHAT_MODELS = {
         provider=ModelProvider.ANTHROPIC,
         description=(
             "Claude 3 Opus is designed for extremely complex tasks with an extended context. "
-            "Strengths: High knowledge, advanced reasoning, and excellent multilingual performance. Excels at solving complex problems, performing multi-step calculations, and providing logical reasoning in responses. Can process large amounts of information and maintain context throughout long conversations. Performs well on tasks like generating detailed research reports, analyzing complex data, and creating high-quality content."
+            "Strengths: High knowledge, advanced reasoning, and excellent multilingual performance. Excels at solving complex problems, performing multi-step calculations, and providing logical reasoning in responses. Can process large amounts of information and maintain context throughout long conversations. Performs well on tasks like generating detailed research reports, analyzing complex data, and creating high-quality content. "
             "Weaknesses: Compared to other models like Claude Sonnet, Opus can be more expensive to use due to its higher processing power. May require more carefully crafted prompts to achieve optimal results, especially for nuanced tasks."
         ),
         max_tokens=200000,
@@ -101,6 +101,72 @@ CHAT_MODELS = {
         },
         tokenCost=75,  
         latency=1.29 
+    ),
+    "claude-3-7-sonnet": ModelInfo(
+        name="claude-3-7-sonnet-20250219",
+        provider=ModelProvider.ANTHROPIC,
+        description=(
+            "Claude 3.7 Sonnet is Anthropic's most intelligent model, with toggleable extended thinking. "
+            "Strengths: Highest level of intelligence and capability, exceptional reasoning for complex tasks, "
+            "top-tier performance across benchmarks including reasoning, coding, multilingual tasks, and image processing. "
+            "Excellent for engaging responses and detailed content creation. Fast response times despite sophisticated processing. "
+            "Weaknesses: May provide more detailed responses than needed for simple queries unless prompted for conciseness."
+        ),
+        max_tokens=200000,
+        benchmarks={
+            "MMLU": 0.887,
+            "GPQA": 0.788,
+            "HumanEval": 0.932,
+            "MATH": 0.962,
+            "BFCL": 0.902,
+            "MGSM": 0.916
+        },
+        tokenCost=15.0,  # Output cost per million tokens ($15.00), input is $3.00 per MTok
+        latency=0.80  # Estimated based on "Fast" classification
+    ),
+    "claude-3-7-sonnet-extended-thinking": ModelInfo(
+        name="claude-3-7-sonnet-20250219-extended",
+        provider=ModelProvider.ANTHROPIC,
+        description=(
+            "Claude 3.7 Sonnet with extended thinking enabled for in-depth reasoning. "
+            "Strengths: Self-reflective reasoning before answering, superior performance on math, physics, "
+            "instruction-following, and coding tasks. Can have thinking budget controlled up to 128K tokens, allowing "
+            "trade-offs between speed, cost, and quality. Supports up to 128K output tokens (15x more than other Claude models). "
+            "Weaknesses: Longer response times due to additional reasoning process. Higher token usage and cost compared to "
+            "standard mode. Not compatible with temperature and top_p modifications."
+        ),
+        max_tokens=200000,
+        benchmarks={
+            "MMLU": 0.902,
+            "GPQA": 0.848,
+            "HumanEval": 0.963,
+            "MATH": 0.997,
+            "BFCL": 0.925,
+            "MGSM": 0.940
+        },
+        tokenCost=15.0,  # All extended thinking tokens billed as output tokens ($15.00 per MTok)
+        latency=1.60  # Higher latency due to extended reasoning process
+    ),
+    "claude-3-5-haiku": ModelInfo(
+        name="claude-3-5-haiku-20241022",
+        provider=ModelProvider.ANTHROPIC,
+        description=(
+            "Claude 3.5 Haiku is Anthropic's fastest model, optimized for speed and efficiency. "
+            "Strengths: Intelligence at blazing speeds, quick and accurate targeted performance, ideal for applications "
+            "requiring rapid responses. Excellent multilingual support and vision capabilities. "
+            "Weaknesses: Less complex reasoning compared to Sonnet and Opus models, shorter maximum output."
+        ),
+        max_tokens=200000,
+        benchmarks={
+            "MMLU": 0.821,
+            "GPQA": 0.490,
+            "HumanEval": 0.792,
+            "MATH": 0.650,
+            "BFCL": 0.780,
+            "MGSM": 0.830
+        },
+        tokenCost=4.00,  # Output cost per million tokens ($4.00), input is $0.80 per MTok
+        latency=0.40  # Lowest latency among Claude models ("Fastest" classification)
     ),
     "claude-3-5-sonnet": ModelInfo(
         name="claude-3-5-sonnet-20241022",
@@ -230,7 +296,7 @@ CHAT_MODELS = {
         name="Qwen/Qwen2-VL-72B-Instruct",
         provider=ModelProvider.TOGETHER,
         description=(
-            "Qwen2-VL (72B) Instruct from Together AI"
+            "Qwen2-VL (72B) Instruct from Together AI. "
             "Strengths: Exhibits excellent ability to interpret and understand complex visual scenes, including object recognition, scene classification, and visual question answering. Its architecture effectively integrates visual and textual information for enhanced multimodal processing. "
             "Weaknesses: May struggle with intricate, multi-step instructions. "
         ),
@@ -251,9 +317,9 @@ CHAT_MODELS = {
         name="mistralai/Mistral-7B-Instruct-v0.2",
         provider=ModelProvider.TOGETHER,
         description=(
-            "Mistral (7B) Instruct v0.2 from Together AI"
-            "Strengths: The primary strength of Mistral-7B v0.2 is unmatched performance at the 7B scale. It leverages clever training and data quality to punch far above its weight. This means users get fairly high accuracy and fluency from a model that can run on a single GPU or even on CPU in some cases. It’s fast and memory-light, ideal for applications where a 70B model is impractical. Mistral7B is especially strong in general reasoning and knowledge. It’s also surprisingly good at coding (nearly matching older 13B code-focused models) and at math word problems (thanks to training on chain-of-thought solutions). "
-            "Weaknesses: As a 7B model, Mistral inevitably has limitations in complexity and knowledge depth. It may falter on extremely specialized or nuanced expert questions (GPQA is an example where 7B likely scores far lower than larger models). Likewise, its coding ability, though good, is not at the level of code-specialized models like CodeLlama-34B or larger GPTs – for very complex coding tasks, it will make mistakes or require multiple attempts. Another weakness is consistency in long outputs"
+            "Mistral (7B) Instruct v0.2 from Together AI. "
+            "Strengths: The primary strength of Mistral-7B v0.2 is unmatched performance at the 7B scale. It leverages clever training and data quality to punch far above its weight. This means users get fairly high accuracy and fluency from a model that can run on a single GPU or even on CPU in some cases. It's fast and memory-light, ideal for applications where a 70B model is impractical. Mistral7B is especially strong in general reasoning and knowledge. It's also surprisingly good at coding (nearly matching older 13B code-focused models) and at math word problems (thanks to training on chain-of-thought solutions). "
+            "Weaknesses: As a 7B model, Mistral inevitably has limitations in complexity and knowledge depth. It may falter on extremely specialized or nuanced expert questions (GPQA is an example where 7B likely scores far lower than larger models). Likewise, its coding ability, though good, is not at the level of code-specialized models like CodeLlama-34B or larger GPTs – for very complex coding tasks, it will make mistakes or require multiple attempts. Another weakness is consistency in long outputs."
         ),
         max_tokens=4096,
         benchmarks={
@@ -269,10 +335,9 @@ CHAT_MODELS = {
         name="microsoft/WizardLM-2-8x22B",
         provider=ModelProvider.TOGETHER,
         description=(
-            "WizardLM-2 (8x22B) from Together AI"
-            "Strengths: WizardLM-2 8×22B’s strengths are its excellent reasoning and conversational abilities. It was specifically tuned to handle complex instructions and dialogues (“Wizard” refers to mastering tricky queries), and it shows – the model can follow convoluted user requests, ask clarifying questions, and produce detailed, correct answers for multi-step problems. Another strength is coding: WizardLM-2 inherited Mistral’s coding skill and enhanced it via finetuning – it often produces correct, well-commented code for difficult challenges, making it useful as a coding assistant. "
-            "Weaknesses: One notable weakness of WizardLM-2 8×22B is safety/alignment issues that arose. This suggests that while it’s very capable, its filtering of harmful or disallowed content might not have been thoroughly refined – it may produce problematic content if prompted incautiously. Thus, in user-facing deployments, it would need an additional safety layer or further fine-tuning to mitigate this. In terms of abilities, the evaluation oddity on GPQA (only ~17.6% in a 0-shot test) indicates a weakness in answering highly specialized science questions without sufficient prompting or few-shot examples​. This could mean WizardLM-2 sometimes doesn’t apply chain-of-thought unless coaxed, or that its knowledge, while broad, might miss some niche academic details that models like DeepSeek targeted. "
-                     
+            "WizardLM-2 (8x22B) from Together AI. "
+            "Strengths: WizardLM-2 8×22B's strengths are its excellent reasoning and conversational abilities. It was specifically tuned to handle complex instructions and dialogues ("Wizard" refers to mastering tricky queries), and it shows – the model can follow convoluted user requests, ask clarifying questions, and produce detailed, correct answers for multi-step problems. Another strength is coding: WizardLM-2 inherited Mistral's coding skill and enhanced it via finetuning – it often produces correct, well-commented code for difficult challenges, making it useful as a coding assistant. "
+            "Weaknesses: One notable weakness of WizardLM-2 8×22B is safety/alignment issues that arose. This suggests that while it's very capable, its filtering of harmful or disallowed content might not have been thoroughly refined – it may produce problematic content if prompted incautiously. Thus, in user-facing deployments, it would need an additional safety layer or further fine-tuning to mitigate this. In terms of abilities, the evaluation oddity on GPQA (only ~17.6% in a 0-shot test) indicates a weakness in answering highly specialized science questions without sufficient prompting or few-shot examples​. This could mean WizardLM-2 sometimes doesn't apply chain-of-thought unless coaxed, or that its knowledge, while broad, might miss some niche academic details that models like DeepSeek targeted."
         ),
         max_tokens=4096,
         benchmarks={

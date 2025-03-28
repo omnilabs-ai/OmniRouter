@@ -375,4 +375,4 @@ IMAGE_MODELS = {
 }
 
 # Combined models dictionary
-MODELS = {**CHAT_MODELS, **IMAGE_MODELS}
+MODELS = {**CHAT_MODELS, **IMAGE_MODELS} 

@@ -6,6 +6,7 @@ from serverRouter.core.exceptions import ProviderError
 from dotenv import load_dotenv
 import json
 from sse_starlette.sse import EventSourceResponse
+from serverRouter.core.models import MODELS
 
 load_dotenv()
 
@@ -30,7 +31,19 @@ class AnthropicProvider(ChatProvider):
             ChatCompletionResponse containing the generated response
         """
         try:
-            # Create the completion
+            # Check if this is an extended thinking model
+            model_params = {}
+            model_key = next((k for k in MODELS if MODELS[k].name == request.model), None)
+            
+            # If this is a model with extended thinking enabled
+            if model_key and hasattr(MODELS[model_key], 'extended_thinking') and MODELS[model_key].extended_thinking:
+                model_params["thinking"] = {
+                    "type": "extended",
+                    "threshold": getattr(MODELS[model_key], 'thinking_threshold', 0.5),
+                    "budget": getattr(MODELS[model_key], 'thinking_budget', 20000)
+                }
+                
+            # Create the completion with potential extended thinking parameters
             response = await self.client.messages.create(
                 model=request.model,
                 messages=[
@@ -38,7 +51,8 @@ class AnthropicProvider(ChatProvider):
                     for msg in request.messages
                 ],
                 max_tokens=request.max_tokens or 4092,
-                temperature=request.temperature or 1.0
+                temperature=request.temperature or 1.0,
+                **model_params
             )
             
             # Convert Anthropic response to our generic format
@@ -51,7 +65,6 @@ class AnthropicProvider(ChatProvider):
                     "output_tokens": response.usage.output_tokens,
                     "total_tokens": response.usage.input_tokens + response.usage.output_tokens
                 }
-
             )
             
         except anthropic.APIError as e:
@@ -71,6 +84,18 @@ class AnthropicProvider(ChatProvider):
                     })
                 }
                 
+                # Check if this is an extended thinking model
+                model_params = {}
+                model_key = next((k for k in MODELS if MODELS[k].name == request.model), None)
+                
+                # If this is a model with extended thinking enabled
+                if model_key and hasattr(MODELS[model_key], 'extended_thinking') and MODELS[model_key].extended_thinking:
+                    model_params["thinking"] = {
+                        "type": "extended",
+                        "threshold": getattr(MODELS[model_key], 'thinking_threshold', 0.5),
+                        "budget": getattr(MODELS[model_key], 'thinking_budget', 20000)
+                    }
+                
                 async with self.client.messages.stream(
                     model=request.model,
                     messages=[
@@ -78,7 +103,8 @@ class AnthropicProvider(ChatProvider):
                         for msg in request.messages
                     ],
                     max_tokens=request.max_tokens or 4092,
-                    temperature=request.temperature or 1.0
+                    temperature=request.temperature or 1.0,
+                    **model_params
                 ) as stream:
                     async for chunk in stream:
                         if chunk.type == "text":

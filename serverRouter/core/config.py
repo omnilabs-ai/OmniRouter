@@ -17,4 +17,4 @@ update_api_keys(initial_keys, None, None)
 api_keys_watch = db.collection('api_keys').on_snapshot(update_api_keys)
 
 PROVIDERS = {}
-MAX_TOKENS = 10000
+MAX_TOKENS = 100000

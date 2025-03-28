@@ -107,7 +107,20 @@ class ModelInfo(BaseModel):
         default=None,
         description="Average latency in seconds per request"
     )
-    
+    # Extended thinking parameters for Claude models
+    extended_thinking: Optional[bool] = Field(
+        default=False,
+        description="Whether this model supports extended thinking mode"
+    )
+    thinking_threshold: Optional[float] = Field(
+        default=0.5,
+        description="Threshold to control when the model uses extended thinking"
+    )
+    thinking_budget: Optional[int] = Field(
+        default=20000,
+        description="Token budget for extended thinking process"
+    )
+
 class SmartRouterRequest(BaseModel):
     messages: list[ChatMessage] = Field(..., description="List of chat messages")
     max_latency: str = Field(..., description="Maximum latency preference (LIGHTNING, FAST, BALANCED, PERFORMANCE)")

@@ -90,7 +90,7 @@ CHAT_MODELS = {
             "Strengths: High knowledge, advanced reasoning, and excellent multilingual performance. Excels at solving complex problems, performing multi-step calculations, and providing logical reasoning in responses. Can process large amounts of information and maintain context throughout long conversations. Performs well on tasks like generating detailed research reports, analyzing complex data, and creating high-quality content. "
             "Weaknesses: Compared to other models like Claude Sonnet, Opus can be more expensive to use due to its higher processing power. May require more carefully crafted prompts to achieve optimal results, especially for nuanced tasks."
         ),
-        max_tokens=200000,
+        max_tokens=4096,
         benchmarks={
             "MMLU": 0.868,
             "GPQA": 0.504,
@@ -112,7 +112,7 @@ CHAT_MODELS = {
             "Excellent for engaging responses and detailed content creation. Fast response times despite sophisticated processing. "
             "Weaknesses: May provide more detailed responses than needed for simple queries unless prompted for conciseness."
         ),
-        max_tokens=200000,
+        max_tokens=8192,
         benchmarks={
             "MMLU": 0.887,
             "GPQA": 0.788,
@@ -135,7 +135,7 @@ CHAT_MODELS = {
             "Weaknesses: Longer response times due to additional reasoning process. Higher token usage and cost compared to "
             "standard mode. Not compatible with temperature and top_p modifications."
         ),
-        max_tokens=200000,
+        max_tokens=64000,
         benchmarks={
             "MMLU": 0.902,
             "GPQA": 0.848,
@@ -156,7 +156,7 @@ CHAT_MODELS = {
             "requiring rapid responses. Excellent multilingual support and vision capabilities. "
             "Weaknesses: Less complex reasoning compared to Sonnet and Opus models, shorter maximum output."
         ),
-        max_tokens=200000,
+        max_tokens=8192,
         benchmarks={
             "MMLU": 0.821,
             "GPQA": 0.490,
@@ -173,10 +173,10 @@ CHAT_MODELS = {
         provider=ModelProvider.ANTHROPIC,
         description=(
             "Anthropic's top performer for complex Q&A and multilingual tasks. "
-            "Strengths: Research-grade answers, non-English queries, and precise tool usage.  Claude 3.5 Sonnet stands out with its ability to write, edit, and execute code effectively, making it a valuable tool for fixing bugs, migrating codebases, and handling complex coding problems. Compared to previous Claude models, Sonnet operates significantly faster, which is beneficial for tasks requiring quick turnaround times like customer support or dynamic content generation.  "
+            "Strengths: Research-grade answers, non-English queries, and precise tool usage. Claude 3.5 Sonnet stands out with its ability to write, edit, and execute code effectively, making it a valuable tool for fixing bugs, migrating codebases, and handling complex coding problems. Compared to previous Claude models, Sonnet operates significantly faster, which is beneficial for tasks requiring quick turnaround times like customer support or dynamic content generation. "
             "Weaknesses: While proficient in many tasks, Claude 3.5 Sonnet may not be as adept at deep analytical tasks requiring a high level of nuance and complexity compared to older models like Claude 3 Opus. Compared to other AI models, Claude might lack advanced features in areas like image recognition or scientific research depending on the specific application."
         ),
-        max_tokens=200000,
+        max_tokens=8192,
         benchmarks={
             "MMLU": 0.887,
             "GPQA": 0.594,
@@ -248,7 +248,7 @@ CHAT_MODELS = {
         name="gemini-2.0-pro-exp-02-05",
         provider=ModelProvider.GEMINI,
         description=(
-            "Google's most advanced model for technical and scientific tasks. It has the strongest coding performance and ability to handle complex prompts, with better understanding and reasoning of world knowledge, than any model Google has released so far. It comes with Google's largest context window at 2 million tokens, which enables it to comprehensively analyze and understand vast amounts of information, as well as the ability to call tools like Google Search and code execution."
+            "Google's most advanced model for technical and scientific tasks. It has the strongest coding performance and ability to handle complex prompts, with better understanding and reasoning of world knowledge, than any model Google has released so far. It comes with Google's largest context window at 2 million tokens, which enables it to comprehensively analyze and understand vast amounts of information, as well as the ability to call tools like Google Search and code execution. "
             "Strengths: STEM subjects, code generation, and multimodal reasoning. "
             "Weaknesses: Less conversational."
         ),
@@ -290,7 +290,7 @@ CHAT_MODELS = {
             "MGSM": 0.689
         },
         tokenCost=0.61,
-        latency = 2.32
+        latency=2.32
     ),
     "Qwen/Qwen2-VL-72B-Instruct": ModelInfo(
         name="Qwen/Qwen2-VL-72B-Instruct",
@@ -311,7 +311,6 @@ CHAT_MODELS = {
         },
         tokenCost=0.40,
         latency=1.04
-
     ),
     "mistralai/Mistral-7B-Instruct-v0.2": ModelInfo(
         name="mistralai/Mistral-7B-Instruct-v0.2",
@@ -336,8 +335,8 @@ CHAT_MODELS = {
         provider=ModelProvider.TOGETHER,
         description=(
             "WizardLM-2 (8x22B) from Together AI. "
-            "Strengths: WizardLM-2 8×22B's strengths are its excellent reasoning and conversational abilities. It was specifically tuned to handle complex instructions and dialogues ("Wizard" refers to mastering tricky queries), and it shows – the model can follow convoluted user requests, ask clarifying questions, and produce detailed, correct answers for multi-step problems. Another strength is coding: WizardLM-2 inherited Mistral's coding skill and enhanced it via finetuning – it often produces correct, well-commented code for difficult challenges, making it useful as a coding assistant. "
-            "Weaknesses: One notable weakness of WizardLM-2 8×22B is safety/alignment issues that arose. This suggests that while it's very capable, its filtering of harmful or disallowed content might not have been thoroughly refined – it may produce problematic content if prompted incautiously. Thus, in user-facing deployments, it would need an additional safety layer or further fine-tuning to mitigate this. In terms of abilities, the evaluation oddity on GPQA (only ~17.6% in a 0-shot test) indicates a weakness in answering highly specialized science questions without sufficient prompting or few-shot examples​. This could mean WizardLM-2 sometimes doesn't apply chain-of-thought unless coaxed, or that its knowledge, while broad, might miss some niche academic details that models like DeepSeek targeted."
+            "Strengths: WizardLM-2 8x22B strengths are its excellent reasoning and conversational abilities. It was specifically tuned to handle complex instructions and dialogues (Wizard refers to mastering tricky queries), and it shows - the model can follow convoluted user requests, ask clarifying questions, and produce detailed, correct answers for multi-step problems. Another strength is coding: WizardLM-2 inherited Mistral coding skill and enhanced it via finetuning - it often produces correct, well-commented code for difficult challenges, making it useful as a coding assistant. "
+            "Weaknesses: One notable weakness of WizardLM-2 8x22B is safety/alignment issues that arose. This suggests that while it is very capable, its filtering of harmful or disallowed content might not have been thoroughly refined - it may produce problematic content if prompted incautiously. Thus, in user-facing deployments, it would need an additional safety layer or further fine-tuning to mitigate this. In terms of abilities, the evaluation oddity on GPQA (only 17.6% in a 0-shot test) indicates a weakness in answering highly specialized science questions without sufficient prompting or few-shot examples. This could mean WizardLM-2 sometimes does not apply chain-of-thought unless coaxed, or that its knowledge, while broad, might miss some niche academic details that models like DeepSeek targeted."
         ),
         max_tokens=4096,
         benchmarks={
@@ -348,8 +347,7 @@ CHAT_MODELS = {
         },
         tokenCost=0.50,
         latency=0.120 
-    ),
-    # ...we need to add additional Together models as needed
+    )
 }
 
 # Primary image models registry
@@ -361,7 +359,7 @@ IMAGE_MODELS = {
             "OpenAI's most advanced image generation model. "
             "Strengths: Highly detailed and photorealistic images, excellent prompt following. "
             "Weaknesses: Higher cost and longer generation time."
-        ),
+        )
     ),
     "dall-e-2": ModelInfo(
         name="dall-e-2",
@@ -370,7 +368,7 @@ IMAGE_MODELS = {
             "OpenAI's efficient image generation model. "
             "Strengths: Fast generation and good quality for common use cases. "
             "Weaknesses: Less detailed and accurate compared to DALL-E 3."
-        ),
+        )
     )
 }
 

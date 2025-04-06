@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from enum import Enum
 from collections.abc import Mapping
 from sse_starlette.sse import EventSourceResponse
+from .function_registry import ToolChoice, FunctionDefinition, FunctionExecutionResult
 
 # Type alias for streaming responses
 ChatCompletionGenerator = EventSourceResponse
@@ -15,12 +16,25 @@ class ModelProvider(str, Enum):
     DEEPSEEK = "deepseek"
     TOGETHER = "together"
     STABLEDIFFUSION = "stablediffusion"
+    XAI = "xai"
 
 ## Chat Completion Models
 class ChatMessage(BaseModel):
     """Represents a single message in a chat conversation"""
     role: str = Field(..., description="Role of the message sender (e.g. 'user', 'assistant', 'system')")
     content: str = Field(..., description="Content of the message")
+
+class FunctionCall(BaseModel):
+    """Function call information in a response"""
+    name: str = Field(..., description="Name of the function to call")
+    arguments: Dict[str, Any] = Field(..., description="Arguments for the function call")
+    id: Optional[str] = Field(None, description="ID for the function call (for response tracking)")
+
+class ToolResponseMessage(BaseModel):
+    """Message containing a tool/function response"""
+    role: Literal["tool"] = "tool"
+    tool_call_id: str = Field(..., description="ID of the tool call this is responding to")
+    content: str = Field(..., description="Content of the tool response")
 
 class ChatCompletionRequest(BaseModel):
     """Input parameters for a chat completion request"""
@@ -29,6 +43,12 @@ class ChatCompletionRequest(BaseModel):
     temperature: float = Field(default=1.0, ge=0.0, le=2.0, description="Sampling temperature (0-2)")
     max_tokens: Optional[int] = Field(default=None, ge=1, description="Maximum number of tokens to generate")
     stream: bool = Field(default=False, description="Whether to stream the response")
+    # Function calling parameters
+    functions: Optional[List[Dict[str, Any]]] = Field(default=None, description="List of functions available to the model")
+    tool_choice: Optional[Union[ToolChoice, str, Dict[str, Any]]] = Field(default=None, description="Controls function calling behavior")
+    # Backward compatibility with OpenAI
+    tools: Optional[List[Dict[str, Any]]] = Field(default=None, description="List of tools (OpenAI format)")
+    function_call: Optional[Union[str, Dict[str, Any]]] = Field(default=None, description="Legacy function call option")
 
 class ChatCompletionResponse(BaseModel):
     """Response from a chat completion request"""
@@ -39,6 +59,9 @@ class ChatCompletionResponse(BaseModel):
         default_factory=lambda: {"total_tokens": 0},
         description="Token usage statistics"
     )
+    # Function calling response
+    function_calls: Optional[List[FunctionCall]] = Field(default=None, description="Function calls made by the model")
+    function_results: Optional[List[FunctionExecutionResult]] = Field(default=None, description="Results of executed functions")
 
 ## Image Generation Models
 class ImageSize(str, Enum):
@@ -119,6 +142,15 @@ class ModelInfo(BaseModel):
     thinking_budget: Optional[int] = Field(
         default=20000,
         description="Token budget for extended thinking process"
+    )
+    # Function calling capabilities
+    supports_functions: Optional[bool] = Field(
+        default=False,
+        description="Whether this model supports function calling"
+    )
+    parallel_function_calling: Optional[bool] = Field(
+        default=False,
+        description="Whether this model supports parallel function calling"
     )
 
 class SmartRouterRequest(BaseModel):

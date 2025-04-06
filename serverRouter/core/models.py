@@ -346,7 +346,46 @@ CHAT_MODELS = {
         },
         tokenCost=0.50,
         latency=0.120 
-    )
+    ),
+    "grok-2-1212": ModelInfo(
+        name="grok-2-latest",
+        provider=ModelProvider.XAI,
+        description=(
+            "xAI's flagship text model with improved efficiency, speed and capabilities. "
+            "Strengths: Excellent performance across reasoning, coding, and mathematical understanding benchmarks. "
+            "Comparable to top-tier models like GPT-4o and Claude 3.5 Sonnet. "
+            "Weaknesses: No access to real-time events or internet information beyond training data."
+        ),
+        max_tokens=131072,
+        benchmarks={
+            "MMLU": 0.875,
+            "GPQA": 0.560,
+            "HumanEval": 0.884,
+            "MATH": 0.761
+        },
+        tokenCost=10.0,  # $10 per million output tokens, $2 per million input tokens
+        latency=0.35  # Estimated latency
+    ),
+    "grok-2-vision-1212": ModelInfo(
+        name="grok-2-vision-latest",
+        provider=ModelProvider.XAI,
+        description=(
+            "xAI's latest multimodal chat model with increased context window. "
+            "Strengths: Can process a wide variety of visual information, including documents, diagrams, charts, "
+            "screenshots, and photographs. Exceptional performance in vision-based tasks, particularly in visual math "
+            "reasoning (MathVista) and document-based question answering (DocVQA). "
+            "Weaknesses: No access to real-time information beyond training data."
+        ),
+        max_tokens=8192,
+        benchmarks={
+            "MathVista": 0.690,
+            "DocVQA": 0.936,
+            "MMMU": 0.661, 
+            "MMLU": 0.870
+        },
+        tokenCost=10.0,  # $10 per million output tokens, $2 per million input tokens
+        latency=0.40  # Estimated latency
+    ),
 }
 
 # Primary image models registry
@@ -368,7 +407,19 @@ IMAGE_MODELS = {
             "Strengths: Fast generation and good quality for common use cases. "
             "Weaknesses: Less detailed and accurate compared to DALL-E 3."
         )
-    )
+    ),
+    "grok-2-image-1212": ModelInfo(
+        name="grok-2-image",
+        provider=ModelProvider.XAI,
+        description=(
+            "xAI's latest image generation model capable of generating multiple images from text prompts. "
+            "Strengths: Supports generating multiple images in a single request (up to 10). "
+            "Weaknesses: Less restricted on content compared to competitors, which may require additional content filtering."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.07,   # $0.07 per image
+        latency=1.5       # Estimated latency for image generation
+    ),
 }
 
 # Combined models dictionary

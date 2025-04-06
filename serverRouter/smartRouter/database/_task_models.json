@@ -24,6 +24,16 @@
             "accuracy": 0.857,
             "cost": 75,
             "latency": 1.99
+        },
+        "grok-2-1212": {
+            "accuracy": 0.875,
+            "cost": 10.0,
+            "latency": 0.35
+        },
+        "grok-2-vision-1212": {
+            "accuracy": 0.870,
+            "cost": 10.0,
+            "latency": 0.40
         }
     },
     "coding": {
@@ -51,6 +61,11 @@
             "accuracy": 0.872,
             "cost": 0.6,
             "latency": 0.56
+        },
+        "grok-2-1212": {
+            "accuracy": 0.884,
+            "cost": 10.0,
+            "latency": 0.35
         }
     },
     "math": {
@@ -78,6 +93,16 @@
             "accuracy": 0.7176,
             "cost": 0.5,
             "latency": 0.48
+        },
+        "grok-2-1212": {
+            "accuracy": 0.761,
+            "cost": 10.0,
+            "latency": 0.35
+        },
+        "grok-2-vision-1212": {
+            "accuracy": 0.690,
+            "cost": 10.0,
+            "latency": 0.40
         }
     },
     "translation": {
@@ -105,6 +130,11 @@
             "accuracy": 0.86,
             "cost": 60.0,
             "latency": 0.59
+        },
+        "grok-2-1212": {
+            "accuracy": 0.880,
+            "cost": 10.0,
+            "latency": 0.35
         }
     },
     "science": {
@@ -132,6 +162,11 @@
             "accuracy": 0.5942,
             "cost": 0.5,
             "latency": 0.48
+        },
+        "grok-2-1212": {
+            "accuracy": 0.680,
+            "cost": 10.0,
+            "latency": 0.35
         }
     },
     "reasoning": {
@@ -159,6 +194,33 @@
             "accuracy": 0.6447999999999999,
             "cost": 60.0,
             "latency": 0.59
+        },
+        "grok-2-1212": {
+            "accuracy": 0.810,
+            "cost": 10.0,
+            "latency": 0.35
+        }
+    },
+    "visual_understanding": {
+        "grok-2-vision-1212": {
+            "accuracy": 0.936,
+            "cost": 10.0,
+            "latency": 0.40
+        },
+        "claude-3-5-sonnet": {
+            "accuracy": 0.902,
+            "cost": 15.0,
+            "latency": 1.22
+        },
+        "gpt-4o": {
+            "accuracy": 0.895,
+            "cost": 10,
+            "latency": 0.48
+        },
+        "qwen2-VL-72B": {
+            "accuracy": 0.880,
+            "cost": 1.2,
+            "latency": 1.5
         }
     }
 }

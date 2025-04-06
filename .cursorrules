@@ -1,0 +1,9 @@
+* Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+* Never replace code with placeholders like `// ... rest of the processing ...`. Always include complete code.
+* Break problems into smaller steps. Think through each step separately before implementing.
+* Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+* Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
+* Try to change the main structure of the codebase as minimally as possible, and only when it is necessary .
+* Before adding any new implementation make sure you read the codebase carefully, and undesrtand every single file, and function in the codebase.
+* For adding test files for any new implementation and functions, always add them in the testLib, and follow the testLib format
+*when encountering an error, do not use hard coding to fix the issue, find the root cause of the error, and use reasoning to fix the root cause

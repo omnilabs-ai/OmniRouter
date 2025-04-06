@@ -1,5 +1,16 @@
 from abc import ABC, abstractmethod
-from .datamodels import ChatCompletionRequest, ChatCompletionResponse, ImageGenerationRequest, ImageGenerationResponse, ChatCompletionGenerator
+from typing import List, Optional, Any, Dict
+
+from .datamodels import (
+    ChatCompletionRequest, 
+    ChatCompletionResponse, 
+    ImageGenerationRequest, 
+    ImageGenerationResponse, 
+    ChatCompletionGenerator,
+    FunctionCall,
+    FunctionExecutionResult
+)
+from .function_registry import ProviderType
 
 class ChatProvider(ABC):
     """Abstract base class for chat completion providers"""
@@ -17,6 +28,28 @@ class ChatProvider(ABC):
         Stream a chat completion response for the given request
         """
         pass
+    
+    @abstractmethod
+    async def parse_function_calls(self, raw_response: Any) -> List[FunctionCall]:
+        """
+        Parse function calls from the provider's raw response
+        """
+        pass
+    
+    @abstractmethod
+    async def create_function_response(self, function_results: List[FunctionExecutionResult]) -> Any:
+        """
+        Create a provider-specific response with function results
+        """
+        pass
+    
+    @property
+    @abstractmethod
+    def provider_type(self) -> ProviderType:
+        """
+        Get the provider type for this implementation
+        """
+        pass
 
 class ImageProvider(ABC):
     """Abstract base class for image generation providers"""
@@ -27,8 +60,4 @@ class ImageProvider(ABC):
         Generate an image based on the given request
         """
         pass
-
-
-
-
 

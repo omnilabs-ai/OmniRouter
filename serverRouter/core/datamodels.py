@@ -17,6 +17,7 @@ class ModelProvider(str, Enum):
     TOGETHER = "together"
     STABLEDIFFUSION = "stablediffusion"
     XAI = "xai"
+    DEEPAI = "deepai"
 
 ## Chat Completion Models
 class ChatMessage(BaseModel):

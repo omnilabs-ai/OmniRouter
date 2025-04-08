@@ -11,6 +11,7 @@ from serverRouter.providers.deepseek.provider import DeepSeekProvider
 from serverRouter.providers.together.provider import TogetherAIProvider
 from serverRouter.providers.stablediffusion.provider import StableDiffusionProvider
 from serverRouter.providers.xai.provider import XAIProvider
+from serverRouter.providers.deepai.provider import DeepAIProvider
 from serverRouter.routes import model_routes, completion_routes, smart_routes, function_routes
 from serverRouter.core.config import PROVIDERS
 from serverRouter.core.exceptions import ProviderError
@@ -49,7 +50,8 @@ def initialize_providers():
             # ModelProvider.DEEPSEEK: DeepSeekProvider(), # NOT Fast Enough, using together instead
             ModelProvider.TOGETHER: TogetherAIProvider(),
             ModelProvider.STABLEDIFFUSION: StableDiffusionProvider(),
-            ModelProvider.XAI: XAIProvider()
+            ModelProvider.XAI: XAIProvider(),
+            ModelProvider.DEEPAI: DeepAIProvider()
         })
     except Exception as e:
         raise

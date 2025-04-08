@@ -420,6 +420,78 @@ IMAGE_MODELS = {
         tokenCost=0.07,   # $0.07 per image
         latency=1.5       # Estimated latency for image generation
     ),
+    "deepai-standard": ModelInfo(
+        name="deepai-standard",
+        provider=ModelProvider.DEEPAI,
+        description=(
+            "DeepAI's standard text-to-image generation model. "
+            "Strengths: Flexible image creation with good quality for general use cases. "
+            "Weaknesses: May not match the photorealism of more advanced models."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.05,   # $5 per 100 API calls, or effectively $0.05 per image
+        latency=1.3       # Estimated latency for image generation
+    ),
+    "deepai-hd": ModelInfo(
+        name="deepai-hd",
+        provider=ModelProvider.DEEPAI,
+        description=(
+            "DeepAI's high-definition text-to-image generation model. "
+            "Strengths: Creates more detailed and higher quality images compared to the standard model. "
+            "Weaknesses: Slightly longer generation time and same cost as standard version."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.05,   # $5 per 100 API calls, or effectively $0.05 per image
+        latency=1.6       # Estimated latency for image generation
+    ),
+    "deepai-genius": ModelInfo(
+        name="deepai-genius",
+        provider=ModelProvider.DEEPAI,
+        description=(
+            "DeepAI's most advanced text-to-image generation model with cinematic style. "
+            "Strengths: Highest quality images with cinematic aesthetic. "
+            "Weaknesses: Longer generation time than standard or HD models."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.05,   # $5 per 100 API calls, or effectively $0.05 per image
+        latency=1.9       # Estimated latency for image generation
+    ),
+    "deepai-genius-anime": ModelInfo(
+        name="deepai-genius-anime",
+        provider=ModelProvider.DEEPAI,
+        description=(
+            "DeepAI's genius text-to-image model optimized for anime-style images. "
+            "Strengths: Creates high-quality anime-style illustrations from text prompts. "
+            "Weaknesses: Specialized for anime aesthetics, may not be suitable for photorealistic needs."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.05,   # $5 per 100 API calls, or effectively $0.05 per image
+        latency=1.9       # Estimated latency for image generation
+    ),
+    "deepai-genius-photography": ModelInfo(
+        name="deepai-genius-photography",
+        provider=ModelProvider.DEEPAI,
+        description=(
+            "DeepAI's genius text-to-image model optimized for photographic realism. "
+            "Strengths: Creates images with a photographic quality and lighting. "
+            "Weaknesses: May struggle with highly abstract or fantastical concepts."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.05,   # $5 per 100 API calls, or effectively $0.05 per image
+        latency=1.9       # Estimated latency for image generation
+    ),
+    "deepai-genius-graphic": ModelInfo(
+        name="deepai-genius-graphic",
+        provider=ModelProvider.DEEPAI,
+        description=(
+            "DeepAI's genius text-to-image model optimized for graphic art and design. "
+            "Strengths: Creates images with a graphic design aesthetic, suitable for logos and digital art. "
+            "Weaknesses: Less suitable for natural scene generation or photorealism."
+        ),
+        max_tokens=None,  # Not applicable for image models
+        tokenCost=0.05,   # $5 per 100 API calls, or effectively $0.05 per image
+        latency=1.9       # Estimated latency for image generation
+    ),
 }
 
 # Combined models dictionary

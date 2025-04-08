@@ -1,3 +1,6 @@
+import time
+from .confidence_utils import calculate_confidence_score, check_if_needs_domain_analysis
+
 from serverRouter.smartRouter.taskEmbeddingManager import task_manager
 
 def classify_prompt(query):
@@ -31,6 +34,52 @@ def classify_prompt(query):
             
     return result
 
+def classify_prompt_with_confidence(query):
+    """
+    Enhanced version of classify_prompt that returns both similarity and confidence scores
+    """
+    similar_tasks_raw = task_manager.find_similar_tasks(query)
+    
+    if not similar_tasks_raw:
+        return {"_meta": {"needs_domain_analysis": True, "query_length": len(query.split()), "timestamp": time.time(), "original_query": query}}
+
+    # Normalize similarity scores to 0-1 range
+    scores = [score for _, score in similar_tasks_raw]
+    min_score = min(scores)
+    max_score = max(scores)
+    score_range = max_score - min_score
+    
+    # Store normalized scores for confidence calculation
+    normalized_similar_tasks = [] 
+    for task_id, score in similar_tasks_raw:
+        normalized_score = (score - min_score) / score_range if score_range > 0 else 0
+        normalized_similar_tasks.append((task_id, normalized_score))
+
+    # Calculate confidence metrics
+    result = {}
+    for task_id, normalized_score in normalized_similar_tasks:
+        if normalized_score >= 0.5:  # Keep original threshold for initial filtering
+            # Calculate confidence using the raw normalized scores list
+            confidence = calculate_confidence_score(query, task_id, normalized_score, normalized_similar_tasks)
+            
+            result[task_id] = {
+                "similarity": float(round(normalized_score, 4)),
+                "confidence": float(round(confidence, 4)),
+                "classification_type": "primary" if confidence > 0.8 else "secondary"
+            }
+    
+    # Check if we need domain-specific analysis based on the calculated results
+    needs_domain_analysis = check_if_needs_domain_analysis(result)
+    
+    # Add metadata about the classification
+    result["_meta"] = {
+        "needs_domain_analysis": needs_domain_analysis,
+        "query_length": len(query.split()),
+        "timestamp": time.time(),
+        "original_query": query
+    }
+            
+    return result
 
 # Example usage:
 if __name__ == "__main__":

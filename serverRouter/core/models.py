@@ -115,36 +115,12 @@ CHAT_MODELS = {
         max_tokens=8192,
         benchmarks={
             "MMLU": 0.800,
-            "GPQA": 0.660,
+            "GPQA": 0.680,
             "HumanEval": 0.950,
-            "MATH": 0.850
+            "MATH": 0.822
         },
         tokenCost=15.0,  # Output cost per million tokens ($15.00), input is $3.00 per MTok
         latency=0.80  # Estimated based on "Fast" classification
-    ),
-    "claude-3-7-sonnet-extended-thinking": ModelInfo(
-        name="claude-3-7-sonnet-20250219",
-        provider=ModelProvider.ANTHROPIC,
-        description=(
-            "Claude 3.7 Sonnet with extended thinking enabled for in-depth reasoning. "
-            "Strengths: Self-reflective reasoning before answering, superior performance on math, physics, "
-            "instruction-following, and coding tasks. Can have thinking budget controlled up to 128K tokens, allowing "
-            "trade-offs between speed, cost, and quality. Supports up to 128K output tokens (15x more than other Claude models). "
-            "Weaknesses: Longer response times due to additional reasoning process. Higher token usage and cost compared to "
-            "standard mode. Not compatible with temperature and top_p modifications."
-        ),
-        max_tokens=64000,
-        benchmarks={
-            "MMLU": 0.840,
-            "GPQA": 0.770,
-            "HumanEval": 0.980,
-            "MATH": 0.950
-        },
-        tokenCost=15.0,  # All extended thinking tokens billed as output tokens ($15.00 per MTok)
-        latency=1.60,  # Higher latency due to extended reasoning process
-        extended_thinking=True,  # Flag to enable extended thinking mode
-        thinking_threshold=0.5,  # Default thinking threshold value
-        thinking_budget=20000   # Default thinking budget (in tokens)
     ),
     "claude-3-5-haiku": ModelInfo(
         name="claude-3-5-haiku-20241022",
@@ -371,5 +347,30 @@ IMAGE_MODELS = {
     )
 }
 
+# Reasoning models registry (models that support extended thinking capabilities)
+REASONING_MODELS = {
+    "claude-3-7-sonnet-extended-thinking": ModelInfo(
+        name="claude-3-7-sonnet-20250219",
+        provider=ModelProvider.ANTHROPIC,
+        description=(
+            "Claude 3.7 Sonnet with extended thinking enabled for in-depth reasoning. "
+            "This model uses Anthropic's new extended thinking feature to provide step-by-step reasoning "
+            "before answering complex questions. It excels at math, coding, and detailed analysis."
+        ),
+        max_tokens=64000,
+        benchmarks={
+            "MMLU": 0.840,
+            "GPQA": 0.848,
+            "HumanEval": 0.980,
+            "MATH": 0.962
+        },
+        tokenCost=15.0,  # All thinking tokens billed as output tokens ($15.00 per MTok)
+        latency=1.60,  # Higher latency due to thinking process
+        extended_thinking=True,  # Flag to enable extended thinking mode
+        thinking_threshold=0.5,  # Default thinking threshold value
+        thinking_budget=20000   # Default thinking budget (in tokens)
+    )
+}
+
 # Combined models dictionary
-MODELS = {**CHAT_MODELS, **IMAGE_MODELS} 
+MODELS = {**CHAT_MODELS, **IMAGE_MODELS, **REASONING_MODELS} 

@@ -6,9 +6,9 @@ import numpy as np
 from serverRouter.smartRouter.taskEmbeddingManager import task_manager
 
 class TaskModelGenerator:
-    def __init__(self, task_benchmarks_path='smartRouter/database/task_benchmarks.json',
-                 model_benchmarks_path='smartRouter/database/model_benchmarks.json',
-                 output_path='smartRouter/database/_task_models.json'):
+    def __init__(self, task_benchmarks_path='serverRouter/smartRouter/database/task_benchmarks.json',
+                 model_benchmarks_path='serverRouter/smartRouter/database/model_benchmarks.json',
+                 output_path='serverRouter/smartRouter/database/_task_models.json'):
         self.task_benchmarks_path = task_benchmarks_path
         self.model_benchmarks_path = model_benchmarks_path
         self.output_path = output_path
@@ -36,6 +36,9 @@ class TaskModelGenerator:
             # Skip non-benchmark fields like provider, max_tokens, etc.
             if benchmark in model_data and benchmark in all_benchmarks:
                 score = model_data.get(benchmark, 0)
+                # Convert "N/A" to 0 for calculation purposes
+                if score == "N/A":
+                    score = 0
                 vector.append(score)
             else:
                 vector.append(0)

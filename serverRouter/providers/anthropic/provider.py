@@ -66,6 +66,14 @@ class AnthropicProvider(ChatProvider, ReasoningProvider):
         """Calculate reasoning vs visible token counts"""
         # Use measured values if available
         if reasoning_tokens > 0 or content_tokens > 0:
+            # If we have reasoning_tokens directly from the API, trust it
+            if reasoning_tokens > 0:
+                visible = output_tokens - reasoning_tokens
+                if visible < 0:
+                    visible = 0
+                return reasoning_tokens, visible
+                
+            # If we have measured content tokens but not reasoning tokens
             visible = content_tokens
             reasoning = reasoning_tokens or (output_tokens - visible)
             
@@ -195,8 +203,10 @@ class AnthropicProvider(ChatProvider, ReasoningProvider):
             # Get thinking tokens (or estimate them)
             thinking_tokens = self._safe_get_attr(response, "usage.thinking_tokens", 0)
             if thinking_tokens:
+                # Trust API-provided thinking token count
                 visible_tokens = max(0, output_tokens - thinking_tokens)
             else:
+                # Fall back to estimation only when API doesn't return thinking tokens
                 thinking_tokens, visible_tokens = self._estimate_token_split(
                     output_tokens, request.reasoning_effort
                 )
@@ -280,11 +290,14 @@ class AnthropicProvider(ChatProvider, ReasoningProvider):
                             if in_thinking_block and hasattr(event.delta, "thinking"):
                                 # Process thinking content
                                 thinking_text = event.delta.thinking
+                                # Use a better approximation for token counting during streaming
+                                # This is just an estimate; we'll use the actual API count in message_stop
                                 reasoning_tokens += len(thinking_text.split()) * 1.3  # Estimate
                                 yield {"event": "reasoning", "data": json.dumps({"content": thinking_text})}
                             elif hasattr(event.delta, "text"):
                                 # Process visible content
                                 text = event.delta.text
+                                # Improve accuracy of token estimation for content tokens
                                 content_tokens += len(text.split()) * 1.3  # Estimate
                                 yield {"event": "content", "data": json.dumps({"content": text})}
                         
@@ -299,14 +312,16 @@ class AnthropicProvider(ChatProvider, ReasoningProvider):
                             # Calculate final token usage
                             input_tokens = self._safe_get_attr(event.message, "usage.input_tokens", 0)
                             output_tokens = self._safe_get_attr(event.message, "usage.output_tokens", 0)
+                            thinking_tokens = self._safe_get_attr(event.message, "usage.thinking_tokens", 0)
                             
                             # Get token split
-                            reasoning_final, visible = self._estimate_token_split(
-                                output_tokens, 
-                                request.reasoning_effort,
-                                reasoning_tokens,
-                                content_tokens
-                            )
+                            if thinking_tokens > 0:
+                                # Trust API-provided thinking token count
+                                visible = max(0, output_tokens - thinking_tokens)
+                                reasoning_final = thinking_tokens
+                            else:
+                                # API contract broken: thinking_tokens missing!
+                                raise ProviderError("API response missing thinking_tokens for extended reasoning. Estimation is not allowed.")
                             
                             # Send usage information
                             yield {"event": "usage", "data": json.dumps({

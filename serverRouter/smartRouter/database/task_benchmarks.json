@@ -3,11 +3,13 @@
         "MMLU": 1.0
     },
     "coding": {
-        "HumanEval": 1.0
+        "HumanEval": 0.3,
+        "SWE-bench verified": 0.7
     },
     "math": {
-        "GSM8K": 0.8,
-        "MGSM": 0.2
+        "GSM8K": 0.2,
+        "MGSM": 0.2,
+        "MATH 500": 0.6
     },
     "translation": {
         "MGSM": 1.0
@@ -18,8 +20,9 @@
     },
     "reasoning": {
         "GPQA": 0.3,
-        "GSM8K": 0.4,
+        "GSM8K": 0.1,
         "BFCL": 0.2,
-        "MGSM": 0.1
+        "MGSM": 0.1,
+        "MATH 500": 0.3
     }
 }

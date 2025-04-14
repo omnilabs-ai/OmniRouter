@@ -6,6 +6,7 @@ from sse_starlette.sse import EventSourceResponse
 
 # Type alias for streaming responses
 ChatCompletionGenerator = EventSourceResponse
+ChatReasoningGenerator = EventSourceResponse
 
 class ModelProvider(str, Enum):
     """Supported model providers"""
@@ -38,6 +39,39 @@ class ChatCompletionResponse(BaseModel):
     usage: Dict[str, int] = Field(
         default_factory=lambda: {"total_tokens": 0},
         description="Token usage statistics"
+    )
+
+## Reasoning Models
+class ReasoningEffort(str, Enum):
+    """Level of reasoning effort for reasoning models"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+class ReasoningTokenUsage(BaseModel):
+    """Detailed token usage for reasoning models"""
+    input_tokens: int = Field(default=0, description="Number of input tokens used")
+    output_tokens: int = Field(default=0, description="Number of visible output tokens used")
+    reasoning_tokens: int = Field(default=0, description="Number of reasoning tokens used")
+    total_tokens: int = Field(default=0, description="Total number of tokens used")
+
+class ChatReasoningRequest(BaseModel):
+    """Input parameters for a reasoning chat completion request"""
+    model: str = Field(..., description="Name of the model to use")
+    messages: List[ChatMessage] = Field(..., description="List of messages in the conversation")
+    reasoning_effort: ReasoningEffort = Field(default=ReasoningEffort.MEDIUM, description="Level of reasoning effort (low, medium, high)")
+    max_tokens: Optional[int] = Field(default=None, ge=1, description="Maximum number of tokens to generate")
+    stream: bool = Field(default=False, description="Whether to stream the response")
+    temperature: float = Field(default=1.0, ge=0.0, le=2.0, description="Sampling temperature (0-2)")
+
+class ChatReasoningResponse(BaseModel):
+    """Response from a reasoning chat completion request"""
+    model: str = Field(..., description="Name of the model used")
+    content: str = Field(..., description="Generated content")
+    provider: str = Field(..., description="Provider that generated the response")
+    usage: ReasoningTokenUsage = Field(
+        default_factory=lambda: ReasoningTokenUsage(),
+        description="Detailed token usage statistics including reasoning tokens"
     )
 
 ## Image Generation Models
@@ -107,7 +141,20 @@ class ModelInfo(BaseModel):
         default=None,
         description="Average latency in seconds per request"
     )
-    
+    # Extended thinking parameters for Claude models
+    extended_thinking: Optional[bool] = Field(
+        default=False,
+        description="Whether this model supports extended thinking mode"
+    )
+    thinking_threshold: Optional[float] = Field(
+        default=0.5,
+        description="Threshold to control when the model uses extended thinking"
+    )
+    thinking_budget: Optional[int] = Field(
+        default=20000,
+        description="Token budget for extended thinking process"
+    )
+
 class SmartRouterRequest(BaseModel):
     messages: list[ChatMessage] = Field(..., description="List of chat messages")
     max_latency: str = Field(..., description="Maximum latency preference (LIGHTNING, FAST, BALANCED, PERFORMANCE)")

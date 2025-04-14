@@ -34,20 +34,11 @@ async def create_chat_completion_stream(
     """Create a chat completion using the specified model."""
     model_name, provider = get_model_and_provider(request.model, CHAT_MODELS)
     request.model = model_name
-    user_id = get_user_id_by_api_key(api_key)
+    # user_id = get_user_id_by_api_key(api_key) # Usage tracking removed for now
     
+    # Directly return the provider's response
     response = await provider.chat_complete_stream(request)
-
-    async def usage_tracking_generator():
-        async for chunk in response.body_iterator:
-            yield chunk
-            if chunk.get("event") == "usage":
-                usage_data = json.loads(chunk.get("data", {}))
-                total_tokens = usage_data.get("total_tokens", 0)
-                add_usage_to_user(user_id, total_tokens)
-    
-    return EventSourceResponse(usage_tracking_generator())
-    
+    return response
 
 @router.post("/images/generate")
 async def create_image(

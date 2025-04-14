@@ -322,6 +322,49 @@ CHAT_MODELS = {
         },
         tokenCost=0.50,
         latency=0.120 
+    ),
+    "grok-2-1212": ModelInfo(
+        name="grok-2-latest",
+        provider=ModelProvider.XAI,
+        description=(
+            "xAI's flagship text model with improved efficiency, speed and capabilities. "
+            "Strengths: Excellent performance across reasoning, coding, and mathematical understanding benchmarks. "
+            "Comparable to top-tier models like GPT-4o and Claude 3.5 Sonnet. "
+            "Weaknesses: No access to real-time events or internet information beyond training data."
+        ),
+        max_tokens=131072,
+        benchmarks={
+            "MMLU": 0.875,
+            "GPQA": 0.560,
+            "HumanEval": 0.884,
+            "MATH": 0.761
+        },
+        tokenCost=10.0,  # $10 per million output tokens, $2 per million input tokens
+        latency=0.35  # Estimated latency
+    ),
+    "grok-3-beta": ModelInfo(
+        name="grok-3-beta",
+        provider=ModelProvider.XAI,
+        description=(
+            "XAI's Grok-3 base model for high-quality conversational AI. "
+            "Strengths: Well-rounded language model with strong reasoning and knowledge capabilities. "
+            "Weaknesses: Higher latency compared to faster variants."
+        ),
+        max_tokens=131072,
+        tokenCost= 15.0,  # $3.00 input + $15.00 output per million tokens
+        latency=1.0  # Estimated average latency
+    ),
+    "grok-3-fast-beta": ModelInfo(
+        name="grok-3-fast-beta",
+        provider=ModelProvider.XAI,
+        description=(
+            "XAI's Grok-3 model optimized for speed. "
+            "Strengths: Same quality as grok-3 but with significantly faster response times. "
+            "Weaknesses: Higher cost per token compared to the standard version."
+        ),
+        max_tokens=131072,
+        tokenCost=25.0,  # $5.00 input + $25.00 output per million tokens
+        latency=0.6  # Lower latency due to faster infrastructure
     )
 }
 
@@ -344,6 +387,17 @@ IMAGE_MODELS = {
             "Strengths: Fast generation and good quality for common use cases. "
             "Weaknesses: Less detailed and accurate compared to DALL-E 3."
         )
+    ),
+    "grok-2-image-1212": ModelInfo(
+        name="grok-2-image-1212",
+        provider=ModelProvider.XAI,
+        description=(
+            "XAI's image generation model. "
+            "Strengths: High-quality image generation from text prompts. "
+            "Weaknesses: Fixed image resolution and format options."
+        ),
+        max_tokens=131072,
+        tokenCost=0.07  # $0.07 per image
     )
 }
 
@@ -369,7 +423,32 @@ REASONING_MODELS = {
         extended_thinking=True,  # Flag to enable extended thinking mode
         thinking_threshold=0.5,  # Default thinking threshold value
         thinking_budget=20000   # Default thinking budget (in tokens)
+    ),
+    "grok-3-mini-beta": ModelInfo(
+        name="grok-3-mini-beta",
+        provider=ModelProvider.XAI,
+        description=(
+            "Lightweight, smaller thinking model in the Grok-3 family. "
+            "Strengths: Affordability and reasoning capabilities for math problems and logical tasks. "
+            "Weaknesses: Less powerful for tasks requiring extensive world knowledge."
+        ),
+        max_tokens=131072,
+        tokenCost=0.50, 
+        latency=0.8  # Slightly higher latency due to reasoning capabilities
+    ),
+    "grok-3-mini-fast-beta": ModelInfo(
+        name="grok-3-mini-fast-beta",
+        provider=ModelProvider.XAI,
+        description=(
+            "Speed-optimized version of Grok-3-mini. "
+            "Strengths: Same quality as grok-3-mini but with faster response times. "
+            "Weaknesses: Higher cost per token compared to standard mini version."
+        ),
+        max_tokens=131072,
+        tokenCost=4.0,  
+        latency=0.5  # Lower latency due to faster infrastructure
     )
+
 }
 
 # Combined models dictionary

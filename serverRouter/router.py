@@ -7,6 +7,7 @@ from serverRouter.providers.gemini.provider import GeminiProvider
 from serverRouter.providers.deepseek.provider import DeepSeekProvider
 from serverRouter.providers.together.provider import TogetherAIProvider
 from serverRouter.providers.stablediffusion.provider import StableDiffusionProvider
+from serverRouter.providers.xai import XAIProvider
 from serverRouter.routes import model_routes, completion_routes, smart_routes, reasoning_routes
 from serverRouter.core.config import PROVIDERS
 
@@ -32,7 +33,8 @@ def initialize_providers():
             ModelProvider.GEMINI: GeminiProvider(),
             # ModelProvider.DEEPSEEK: DeepSeekProvider(), # NOT Fast Enough, using together instead
             ModelProvider.TOGETHER: TogetherAIProvider(),
-            ModelProvider.STABLEDIFFUSION: StableDiffusionProvider()
+            ModelProvider.STABLEDIFFUSION: StableDiffusionProvider(),
+            ModelProvider.XAI: XAIProvider()
         })
     except Exception as e:
         raise

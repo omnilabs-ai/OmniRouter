@@ -1,56 +1,56 @@
 {
     "general_knowledge": {
+        "deepseek-r1": {
+            "accuracy": 0.908,
+            "cost": 7.0,
+            "latency": 100.0
+        },
         "gpt-4o": {
             "accuracy": 0.887,
             "cost": 10,
-            "latency": 0.48
+            "latency": 0.63
         },
         "deepseek-v3": {
             "accuracy": 0.885,
             "cost": 1.25,
             "latency": 1
         },
-        "claude-3-5-sonnet": {
-            "accuracy": 0.883,
-            "cost": 15.0,
-            "latency": 1.22
-        },
-        "gpt-4": {
-            "accuracy": 0.864,
-            "cost": 60.0,
-            "latency": 0.59
-        },
         "claude-3-opus": {
-            "accuracy": 0.857,
+            "accuracy": 0.882,
             "cost": 75,
             "latency": 1.99
+        },
+        "claude-3-5-sonnet": {
+            "accuracy": 0.871,
+            "cost": 15.0,
+            "latency": 1.22
         }
     },
     "coding": {
+        "deepseek-r1": {
+            "accuracy": 0.5933999999999999,
+            "cost": 7.0,
+            "latency": 100.0
+        },
+        "deepseek-v3": {
+            "accuracy": 0.5418,
+            "cost": 1.25,
+            "latency": 1
+        },
+        "claude-3-7-sonnet-extended-thinking": {
+            "accuracy": 0.4920999999999999,
+            "cost": 15,
+            "latency": 0.85
+        },
+        "claude-3-7-sonnet": {
+            "accuracy": 0.4361,
+            "cost": 15,
+            "latency": 0.8
+        },
         "claude-3-5-sonnet": {
-            "accuracy": 0.937,
+            "accuracy": 0.34299999999999997,
             "cost": 15.0,
             "latency": 1.22
-        },
-        "gemini-2.0-flash-lite": {
-            "accuracy": 0.904,
-            "cost": 0.5,
-            "latency": 0.48
-        },
-        "gpt-4o": {
-            "accuracy": 0.902,
-            "cost": 10,
-            "latency": 0.48
-        },
-        "qwen2-VL-72B": {
-            "accuracy": 0.88,
-            "cost": 1.2,
-            "latency": 1.5
-        },
-        "gpt-4o-mini": {
-            "accuracy": 0.872,
-            "cost": 0.6,
-            "latency": 0.56
         }
     },
     "math": {
@@ -59,25 +59,25 @@
             "cost": 1.25,
             "latency": 1
         },
-        "claude-3-5-sonnet": {
-            "accuracy": 0.8096000000000001,
-            "cost": 15.0,
-            "latency": 1.22
-        },
         "gpt-4o": {
             "accuracy": 0.7938000000000001,
             "cost": 10,
-            "latency": 0.48
+            "latency": 0.63
         },
-        "gpt-4o-mini": {
-            "accuracy": 0.7356,
-            "cost": 0.6,
-            "latency": 0.56
+        "claude-3-7-sonnet-extended-thinking": {
+            "accuracy": 0.7372,
+            "cost": 15,
+            "latency": 0.85
         },
-        "gemini-2.0-flash-lite": {
-            "accuracy": 0.7176,
-            "cost": 0.5,
-            "latency": 0.48
+        "deepseek-r1": {
+            "accuracy": 0.7332000000000001,
+            "cost": 7.0,
+            "latency": 100.0
+        },
+        "claude-3-5-sonnet": {
+            "accuracy": 0.6098,
+            "cost": 15.0,
+            "latency": 1.22
         }
     },
     "translation": {
@@ -86,30 +86,45 @@
             "cost": 15.0,
             "latency": 1.22
         },
-        "claude-3-opus": {
-            "accuracy": 0.907,
-            "cost": 75,
-            "latency": 1.99
-        },
         "gpt-4o": {
             "accuracy": 0.905,
             "cost": 10,
-            "latency": 0.48
+            "latency": 0.63
         },
-        "gpt-4o-mini": {
-            "accuracy": 0.87,
-            "cost": 0.6,
-            "latency": 0.56
+        "deepseek-r1": {
+            "accuracy": 0.9,
+            "cost": 7.0,
+            "latency": 100.0
+        },
+        "deepseek-v3": {
+            "accuracy": 0.798,
+            "cost": 1.25,
+            "latency": 1
         },
         "gpt-4": {
-            "accuracy": 0.86,
+            "accuracy": 0.0,
             "cost": 60.0,
             "latency": 0.59
         }
     },
     "science": {
+        "claude-3-7-sonnet-extended-thinking": {
+            "accuracy": 0.8455999999999999,
+            "cost": 15,
+            "latency": 0.85
+        },
+        "deepseek-r1": {
+            "accuracy": 0.7728999999999999,
+            "cost": 7.0,
+            "latency": 100.0
+        },
+        "claude-3-7-sonnet": {
+            "accuracy": 0.7225999999999999,
+            "cost": 15,
+            "latency": 0.8
+        },
         "claude-3-5-sonnet": {
-            "accuracy": 0.7199,
+            "accuracy": 0.7162999999999999,
             "cost": 15.0,
             "latency": 1.22
         },
@@ -117,29 +132,9 @@
             "accuracy": 0.6792,
             "cost": 1.25,
             "latency": 1
-        },
-        "gpt-4o": {
-            "accuracy": 0.6413,
-            "cost": 10,
-            "latency": 0.48
-        },
-        "claude-3-opus": {
-            "accuracy": 0.6099,
-            "cost": 75,
-            "latency": 1.99
-        },
-        "gemini-2.0-flash-lite": {
-            "accuracy": 0.5942,
-            "cost": 0.5,
-            "latency": 0.48
         }
     },
     "reasoning": {
-        "claude-3-5-sonnet": {
-            "accuracy": 0.7802000000000001,
-            "cost": 15.0,
-            "latency": 1.22
-        },
         "deepseek-v3": {
             "accuracy": 0.7323,
             "cost": 1.25,
@@ -148,17 +143,22 @@
         "gpt-4o": {
             "accuracy": 0.7249000000000001,
             "cost": 10,
-            "latency": 0.48
+            "latency": 0.63
         },
-        "claude-3-opus": {
-            "accuracy": 0.6591,
-            "cost": 75,
-            "latency": 1.99
+        "claude-3-7-sonnet-extended-thinking": {
+            "accuracy": 0.623,
+            "cost": 15,
+            "latency": 0.85
         },
-        "gpt-4": {
-            "accuracy": 0.6447999999999999,
-            "cost": 60.0,
-            "latency": 0.59
+        "deepseek-r1": {
+            "accuracy": 0.5811000000000001,
+            "cost": 7.0,
+            "latency": 100.0
+        },
+        "claude-3-5-sonnet": {
+            "accuracy": 0.4999,
+            "cost": 15.0,
+            "latency": 1.22
         }
     }
 }

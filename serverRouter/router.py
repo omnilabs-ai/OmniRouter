@@ -7,7 +7,7 @@ from serverRouter.providers.gemini.provider import GeminiProvider
 from serverRouter.providers.deepseek.provider import DeepSeekProvider
 from serverRouter.providers.together.provider import TogetherAIProvider
 from serverRouter.providers.stablediffusion.provider import StableDiffusionProvider
-from serverRouter.routes import model_routes, completion_routes, smart_routes
+from serverRouter.routes import model_routes, completion_routes, smart_routes, reasoning_routes
 from serverRouter.core.config import PROVIDERS
 
 
@@ -43,6 +43,7 @@ initialize_providers()
 app.include_router(model_routes.router)
 app.include_router(completion_routes.router)
 app.include_router(smart_routes.router)
+app.include_router(reasoning_routes.router)
 
 
 @app.get("/")

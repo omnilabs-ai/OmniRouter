@@ -58,7 +58,7 @@ async def create_reasoning_completion_stream(
     try:
         model_name, provider = get_model_and_provider(request.model, REASONING_MODELS)
         request.model = model_name
-        user_id = get_user_id_by_api_key(api_key)
+        # user_id = get_user_id_by_api_key(api_key) # Usage tracking removed for now
         
         # Ensure the provider supports reasoning
         if not hasattr(provider, 'chat_reason_complete_stream'):
@@ -70,19 +70,20 @@ async def create_reasoning_completion_stream(
         # Set stream to true for request
         request.stream = True
         
-        # Get streaming response
+        # Get streaming response directly from provider
         response = await provider.chat_reason_complete_stream(request)
-        
-        # Track usage from stream data
-        async def usage_tracking_generator():
-            async for chunk in response.body_iterator:
-                yield chunk
-                if chunk.get("event") == "usage":
-                    usage_data = json.loads(chunk.get("data", {}))
-                    total_tokens = usage_data.get("total_tokens", 0)
-                    add_usage_to_user(user_id, total_tokens)
-        
-        return EventSourceResponse(usage_tracking_generator())
+        return response
+
+        # Removed usage tracking wrapper:
+        # async def usage_tracking_generator():
+        #     async for chunk in response.body_iterator:
+        #         yield chunk
+        #         if chunk.get("event") == "usage":
+        #             usage_data = json.loads(chunk.get("data", {}))
+        #             total_tokens = usage_data.get("total_tokens", 0)
+        #             add_usage_to_user(user_id, total_tokens)
+        # 
+        # return EventSourceResponse(usage_tracking_generator())
     except Exception as e:
         import traceback
         error_detail = f"Error in streaming reasoning completion: {str(e)}\n{traceback.format_exc()}"

@@ -14,3 +14,4 @@ serverRouter/providers/together/sample.py
 
 .DS_Store
 serverRouter/DS_Store
+new-omni-env/

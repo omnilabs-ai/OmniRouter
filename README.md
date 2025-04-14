@@ -33,6 +33,8 @@ The codebase is organized into the following main sections:
     - `exceptions`: Contains exceptions for the API
   - `providers`: Contains provider implementations for different LLM models.
   - `router.py`: Main FastAPI router for handling API requests. Entry point to the application
+- `docs`: API documentation and guides
+  - `reasoning_api.md`: Documentation for using the reasoning API
 
 ## Core Features
 The project offers the following core features in its implementation order:
@@ -41,6 +43,24 @@ The project offers the following core features in its implementation order:
 3. Dynamic Routing: Route queries to the best or most cost-efficient model.
 4. Customizable Routing Rules: User-defined criteria for model selection.
 5. Chat Interface: GPT-like interface for model selection during queries.
+6. Reasoning API: Enhanced reasoning capabilities for step-by-step problem solving.
+
+## API Documentation
+
+### Chat API
+Standard chat completions interface compatible with OpenAI's API.
+
+### Image API
+Image generation interface compatible with OpenAI's API.
+
+### Reasoning API
+Advanced reasoning capabilities for complex problem solving. Models with extended thinking capabilities provide step-by-step reasoning alongside their responses. See [Reasoning API Documentation](docs/reasoning_api.md) for details on:
+
+- Available reasoning models
+- How to use the reasoning API
+- Streaming reasoning responses
+- Understanding reasoning effort levels
+- Controlling reasoning budget
 
 ## For Users
 - **Slogan:** One Key, One API, Hundreds of Models
@@ -49,6 +69,7 @@ The project offers the following core features in its implementation order:
   - Single payment for multiple models.
   - Simplified model switching.
   - Optimized performance and cost-efficiency.
+  - Enhanced reasoning capabilities for complex problems.
 
 
 

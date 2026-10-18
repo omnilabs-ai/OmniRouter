@@ -1,0 +1,52 @@
+[project]
+# Distribution name for v2 (working name, see README). The import package and CLI are `omni`.
+# The v1 router under serverRouter/ is not part of this package; it keeps requirements.txt.
+name = "swapsafe"
+version = "0.0.1"
+description = "Swap-Safety Engine: evidence for model swaps from your own traffic, compiled into gateway policies."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+authors = [{ name = "omnilabs-ai" }]
+dependencies = [
+    "typer>=0.12",
+]
+
+[project.scripts]
+omni = "omni.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "ruff>=0.6",
+    "pre-commit>=3.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omni"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+# v1 code is legacy and not linted; it is removed or ported by later PRs.
+extend-exclude = ["serverRouter", "testLib", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "W"]
+ignore = ["B008"]  # typer.Option() in parameter defaults
+
+[tool.pytest.ini_options]
+# v2 tests only; v1 tests live in testLib/ and need the v1 requirements (`pytest testLib`).
+testpaths = ["tests"]
+addopts = "-q -p no:warnings"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+    "ignore::FutureWarning",
+    "ignore::RuntimeWarning",
+]

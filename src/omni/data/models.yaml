@@ -6,6 +6,9 @@
 # a public page is left out. Prompt-size and date-based tiers are not modelled yet; `notes`
 # says when one applies.
 #
+# This file ships inside the `omni` package (src/omni/data/) so the installed CLI can sync it from
+# any directory; pass `omni catalog sync --file PATH` to load a different catalog.
+#
 # model_id is the provider-native id. The replay adapter (PR 7) adds any gateway prefix.
 #
 # Conventions in cost_of: `input` = uncached input tokens; cached input tokens are billed at

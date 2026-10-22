@@ -26,7 +26,8 @@ from sqlalchemy.orm import Session
 
 from omni.models import ModelCatalog
 
-DEFAULT_CATALOG_PATH = Path("catalog") / "models.yaml"
+# Shipped inside the package so `omni catalog sync` works wherever the CLI is installed.
+DEFAULT_CATALOG_PATH = Path(__file__).resolve().parent / "data" / "models.yaml"
 MILLION = Decimal(1_000_000)
 USAGE_KEYS = ("input", "output", "cached_input", "reasoning")
 

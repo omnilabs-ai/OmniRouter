@@ -76,3 +76,7 @@ Advanced reasoning capabilities for complex problem solving. Models with extende
 ## Others
 
 - Create a clean pip requirements: `pip list --format=freeze > requirements.txt`
+
+## Credentials (v1)
+
+The Firebase service-account file is not in the repository. Set `FIREBASE_CREDENTIALS_PATH` to its location, or leave it unset to use Application Default Credentials. Provider keys are read from the environment by the provider SDKs.

@@ -1,0 +1,93 @@
+# Model catalog and pricing table (ADR 0004).
+#
+# One entry per currently sold model. Prices are USD per 1M tokens (per_request: USD per call),
+# standard tier, as shown on the provider's public pricing page at `source_url` on
+# `pricing_verified_at`. Nothing here is estimated: a model whose price could not be read from
+# a public page is left out. Prompt-size and date-based tiers are not modelled yet; `notes`
+# says when one applies.
+#
+# model_id is the provider-native id. The replay adapter (PR 7) adds any gateway prefix.
+#
+# Conventions in cost_of: `input` = uncached input tokens; cached input tokens are billed at
+# `cached_input` only; reasoning tokens at `reasoning`, or at the output rate when null.
+
+version: 1
+models:
+  - model_id: claude-opus-5-5
+    provider: anthropic
+    display_name: Claude Opus 5.5
+    context_window: 1000000
+    max_output: 128000
+    capabilities: {tools: true, vision: true, json_mode: true, reasoning_effort_levels: [low, medium, high, xhigh, max]}
+    pricing: {input: 4.00, output: 20.00, cached_input: 0.20, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://platform.claude.com/docs/en/about-claude/pricing
+    notes: cached_input is the cache-hit rate; cache writes (5m $5, 1h $8) are not modelled. Full 1M context at standard pricing.
+
+  - model_id: claude-sonnet-5-5
+    provider: anthropic
+    display_name: Claude Sonnet 5.5
+    context_window: 1000000
+    max_output: 128000
+    capabilities: {tools: true, vision: true, json_mode: true, reasoning_effort_levels: [low, medium, high, xhigh, max]}
+    pricing: {input: 2.00, output: 10.00, cached_input: 0.10, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://platform.claude.com/docs/en/about-claude/pricing
+    notes: cached_input is the cache-hit rate; cache writes (5m $2.50, 1h $4) are not modelled. Full 1M context at standard pricing.
+
+  - model_id: claude-haiku-5-5
+    provider: anthropic
+    display_name: Claude Haiku 5.5
+    context_window: 1000000
+    max_output: 128000
+    capabilities: {tools: true, vision: true, json_mode: true, reasoning_effort_levels: [low, medium, high, xhigh, max]}
+    pricing: {input: 0.10, output: 0.50, cached_input: 0.01, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://platform.claude.com/docs/en/about-claude/pricing
+    notes: Rates for prompts up to 100,000 tokens (cache reads and writes count toward prompt length). Prompts over 100,000 tokens bill 5x (input 0.50, cached 0.05, output 2.50); that tier is not modelled.
+
+  - model_id: gpt-6.1-sol
+    provider: openai
+    display_name: GPT-6.1 Sol
+    capabilities: {tools: true, vision: true, json_mode: true}
+    pricing: {input: 2.00, output: 10.00, cached_input: 0.10, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://developers.openai.com/api/docs/pricing
+    notes: Standard tier, short context (prompts up to 272K input tokens); the long-context tier is not modelled. Reasoning tokens are billed as output.
+
+  - model_id: gpt-6-luna
+    provider: openai
+    display_name: GPT-6 Luna
+    capabilities: {tools: true, vision: true, json_mode: true}
+    pricing: {input: 0.10, output: 0.50, cached_input: 0.01, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://developers.openai.com/api/docs/pricing
+    notes: Standard tier, short context (prompts up to 272K input tokens). Reasoning tokens are billed as output.
+
+  - model_id: gemini-4-argon
+    provider: google
+    display_name: Gemini 4 Argon
+    capabilities: {tools: true, vision: true, json_mode: true}
+    pricing: {input: 2.00, output: 10.00, cached_input: 0.10, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://ai.google.dev/gemini-api/docs/pricing
+    notes: Introductory prices through 2026-11-30; from 2026-12-01 the page lists input 4.00, output 20.00, cached 0.20. Output price includes thinking tokens. Implicit caching only.
+
+  - model_id: gemini-3.8-flash
+    provider: google
+    display_name: Gemini 3.8 Flash
+    capabilities: {tools: true, vision: true, json_mode: true}
+    pricing: {input: 0.75, output: 3.75, cached_input: 0.075, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://ai.google.dev/gemini-api/docs/pricing
+    notes: Introductory prices through 2026-12-31; from 2027-01-01 the page lists input 1.50, output 7.50, cached 0.15. Output price includes thinking tokens. Cache storage ($0.50 per 1M tokens per hour) is not modelled.
+
+  - model_id: Qwen/Qwen3-235B-A22B-Instruct-2507-tput
+    provider: together_ai
+    display_name: Qwen3 235B A22B Instruct 2507 (Together, throughput tier)
+    context_window: 262144
+    capabilities: {tools: true, vision: false, json_mode: true}
+    pricing: {input: 0.20, output: 0.60, cached_input: null, reasoning: null, per_request: 0}
+    pricing_verified_at: 2026-10-22
+    source_url: https://www.together.ai/models/qwen3-235b-a22b-instruct-2507-fp8
+    notes: Open-weight model served by Together (serverless, FP8 throughput tier). No prompt-cache discount is published, so cached_input is null and cost_of rejects cached tokens for this model.

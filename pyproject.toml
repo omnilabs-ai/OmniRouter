@@ -1,14 +1,16 @@
 [project]
-# Distribution name for v2 (working name, see README). The import package and CLI are `omni`.
+# OmniRouter v2. The import package and CLI are `omni`.
 # The v1 router under serverRouter/ is not part of this package; it keeps requirements.txt.
-name = "swapsafe"
+name = "omnirouter"
 version = "0.0.1"
-description = "Swap-Safety Engine: evidence for model swaps from your own traffic, compiled into gateway policies."
+description = "OmniRouter: evidence for model swaps from your own traffic, compiled into gateway routing policies."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.12"
 authors = [{ name = "omnilabs-ai" }]
 dependencies = [
+    "alembic>=1.13",
+    "sqlalchemy>=2.0.30",
     "typer>=0.12",
 ]
 
@@ -33,7 +35,8 @@ packages = ["src/omni"]
 line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
-# v1 code is legacy and not linted; it is removed or ported by later PRs.
+# The v1 router (serverRouter/, testLib/) predates these tools and is not linted; it stays as
+# reference until its pieces are ported into v2 or retired, one PR at a time.
 extend-exclude = ["serverRouter", "testLib", "docs"]
 
 [tool.ruff.lint]

@@ -32,6 +32,7 @@ uv run pre-commit install
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run omni --version
+uv run omni db upgrade          # creates .omni/omni.db, or migrates $DATABASE_URL
 ```
 
 Conventions for PRs, commits, tests, ADRs and secrets are in [CONTRIBUTING.md](CONTRIBUTING.md).

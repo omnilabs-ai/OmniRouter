@@ -1,0 +1,2 @@
+# Keep LF in the repository regardless of the developer OS.
+* text=auto eol=lf

@@ -13,8 +13,10 @@ decision (design doc section 3); until then the catalog has to be reviewable by 
 
 ## Decision
 
-- **The catalog is a file in the repository**, `catalog/models.yaml`, validated by a pydantic
-  schema that rejects unknown keys. Changing a price is a reviewed PR with a diff.
+- **The catalog is a file in the repository**, `src/omni/data/models.yaml`, validated by a
+  pydantic schema that rejects unknown keys. Changing a price is a reviewed PR with a diff. It
+  lives inside the package so the installed CLI finds it from any working directory;
+  `omni catalog sync --file` loads a different file.
 - **Every entry records where its numbers came from and when**: `source_url` is the
   provider's public pricing page and `pricing_verified_at` is the date someone checked it.
   A model whose price cannot be verified from a public page is left out rather than guessed.

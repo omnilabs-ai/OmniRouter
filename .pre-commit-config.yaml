@@ -15,6 +15,11 @@ repos:
       - id: check-added-large-files
         args: [--maxkb=1024]
       - id: check-yaml
+      # The whitespace fixers are scoped to v2 so `pre-commit run --all-files` does not
+      # rewrite the legacy v1 tree (serverRouter/, testLib/, docs/v1/), which later PRs
+      # remove or port. Secret detection stays repository-wide on purpose.
       - id: end-of-file-fixer
+        exclude: ^(serverRouter/|testLib/|docs/v1/|docs/examples/|docs/reasoning_api\.md|\.cursorrules|requirements\.txt|dev-requirements\.txt|prodenv\.yml)
       - id: trailing-whitespace
+        exclude: ^(serverRouter/|testLib/|docs/v1/|docs/examples/|docs/reasoning_api\.md|\.cursorrules|requirements\.txt|dev-requirements\.txt|prodenv\.yml)
       - id: detect-private-key

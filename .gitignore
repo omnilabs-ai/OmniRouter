@@ -1,17 +1,43 @@
-venv/
-__pycache__/
-*.pyc
+# secrets: never commit these
+*credentials*.json
+*adminsdk*.json
+*.pem
+*.key
 .env
-.idea/
-.vscode/
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+new-omni-env/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 *.log
+
+# local dev data
+*.db
+*.sqlite
+.omni/
+
+# v1 (serverRouter) leftovers
 .vercel
 templates/
-test_sd_server.py 
+test_sd_server.py
 test_together_server.py
 serverRouter/providers/stablediffusion/sample.py
 serverRouter/providers/together/sample.py
-
-.DS_Store
 serverRouter/DS_Store
-new-omni-env/
+
+# editors / os
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

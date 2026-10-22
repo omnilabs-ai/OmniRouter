@@ -6,7 +6,6 @@ models (PR 2); ``catalog`` (PR 3), ``ingest`` (PR 4) and the rest follow.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -42,24 +41,14 @@ def main(
 # ----------------------------------------------------------------------------- db
 
 
-def alembic_config(url: str | None = None):
-    """Alembic config pointing at the packaged migrations; no alembic.ini needed."""
-    from alembic.config import Config
-
-    from omni.db import database_url
-
-    cfg = Config()
-    cfg.set_main_option("script_location", str(Path(__file__).resolve().parent / "migrations"))
-    cfg.set_main_option("sqlalchemy.url", url or database_url())
-    return cfg
-
-
 @db_app.command("upgrade")
 def db_upgrade(
     revision: Annotated[str, typer.Argument(help="target revision")] = "head",
 ) -> None:
     """Apply migrations up to REVISION (default: head)."""
     from alembic import command
+
+    from omni.db import alembic_config
 
     cfg = alembic_config()
     command.upgrade(cfg, revision)
@@ -75,6 +64,8 @@ def db_revision(
 ) -> None:
     """Create a new migration file (development). Review it before committing."""
     from alembic import command
+
+    from omni.db import alembic_config
 
     cfg = alembic_config()
     command.revision(cfg, message=message, autogenerate=autogenerate)

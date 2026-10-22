@@ -6,12 +6,14 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from omni.db import database_url
+from omni.db import database_url, ensure_sqlite_parent
 from omni.models import Base
 
 config = context.config
 if not config.get_main_option("sqlalchemy.url"):
     config.set_main_option("sqlalchemy.url", database_url())
+# Running `alembic` directly (not via `omni db`) must also work on a fresh checkout.
+ensure_sqlite_parent(config.get_main_option("sqlalchemy.url"))
 
 target_metadata = Base.metadata
 

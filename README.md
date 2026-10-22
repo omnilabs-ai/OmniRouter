@@ -1,78 +1,42 @@
-# OmniRouter
+# OmniRouter v2 — the Swap-Safety Engine
 
-## Overview
-OmniRouter is a project that aims to provide a unified API interface for all modern LLMs (Large Language Models). It enables seamless model switching and performance optimization, offering a convenient solution for developers and users alike.
+> **Status: pre-alpha.** v2 is being built in this repository as a sequence of small,
+> reviewed PRs; see [docs/ROADMAP.md](docs/ROADMAP.md) for where it is going and
+> [docs/adr](docs/adr) for why. The working name of the v2 distribution is `swapsafe`; the
+> Python package and CLI are `omni`. The v1 router under `serverRouter/` is legacy: its
+> README is at [docs/v1/README.md](docs/v1/README.md) and it is removed or ported by later PRs.
 
-## Contributing
-When contributing to the project, please follow these guidelines:
-- Do not make direct changes to the **dev** or **main** branches. Create a new branch for your feature development.
-- Push your branch to the GitHub repository and submit a **pull request** to merge your changes into the **dev** branch.
+Teams change their primary model every month and run dozens of models, but nobody can answer
+"is model X safe to swap in for my workload Y, and what does it save?" with evidence. The
+Swap-Safety Engine turns the customer's own production traffic into the benchmark: it segments
+traffic into workloads, replays stratified samples against candidate models in shadow, scores
+results with calibrated judges and task checkers, quantifies the quality/cost/latency delta
+with confidence intervals, and compiles the result into a routing policy for whatever gateway
+the customer already runs (LiteLLM, Vercel AI Gateway, OpenRouter, claude-code-router, vLLM
+semantic-router, or our own small decision API). Every production response then carries a
+signed route receipt that links back to the evidence. It re-runs automatically when a new model
+ships or the incumbent drifts. We never need to be the gateway, and the customer's data never
+has to leave their VPC.
 
-## Building
-To build the project, follow these steps:
-1. Create a virtual environment using `python -m venv venv`.
-2. Activate the virtual environment with `venv\Scripts\activate`.
-3. Install all dependencies by running `pip install -r requirements.txt`.
-4. If you add new packages, update the package manager with `pip freeze > requirements.txt`.
+**What this is not:** a provider-unification gateway, a prompt-category classifier, a free-tier
+aggregator, a hosted inference marketplace, or a live per-request router. v2 is offline
+evidence plus compiled policies; the agent sidecar is observe-only ([ADR 0001](docs/adr/0001-offline-evidence-and-compiled-policies.md)).
 
-## Testing
-To run the server and client components for testing:
-- Run the server with `python -m testLib.server`.
-- Run the chat client with `python -m testLib.chat_client`.
-- Run the image client with `python -m testLib.image_client`.
+## Development
 
-## Codebase Structure
-The codebase is organized into the following main sections:
-- `clientLib`: Contains client-side libraries and utilities.
-- `testLib`: Contains the testing framework to run when validating new builds
-- `serverRouter`: Includes the core functionality of the OmniRouter server.
-  - `core`: Defines data models and core functionalities.
-    - `datamodels`: Contains the response and request objects to be sent from the client
-    - `interfaces`: Contains a chat and image interface for providers to extend and implement.
-    - `models`: Contains the list of image and chat models along with their information.
-    - `exceptions`: Contains exceptions for the API
-  - `providers`: Contains provider implementations for different LLM models.
-  - `router.py`: Main FastAPI router for handling API requests. Entry point to the application
-- `docs`: API documentation and guides
-  - `reasoning_api.md`: Documentation for using the reasoning API
+Python 3.12 managed with [uv](https://docs.astral.sh/uv/).
 
-## Core Features
-The project offers the following core features in its implementation order:
-1. Unified API Interface: Standardized API for all models.
-2. Basic Documentation: User-friendly guides and references.
-3. Dynamic Routing: Route queries to the best or most cost-efficient model.
-4. Customizable Routing Rules: User-defined criteria for model selection.
-5. Chat Interface: GPT-like interface for model selection during queries.
-6. Reasoning API: Enhanced reasoning capabilities for step-by-step problem solving.
+```bash
+uv sync --all-groups
+uv run pre-commit install
+uv run pytest
+uv run ruff check . && uv run ruff format --check .
+uv run omni --version
+```
 
-## API Documentation
+Conventions for PRs, commits, tests, ADRs and secrets are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Pull requests target `dev`.
 
-### Chat API
-Standard chat completions interface compatible with OpenAI's API.
+## License
 
-### Image API
-Image generation interface compatible with OpenAI's API.
-
-### Reasoning API
-Advanced reasoning capabilities for complex problem solving. Models with extended thinking capabilities provide step-by-step reasoning alongside their responses. See [Reasoning API Documentation](docs/reasoning_api.md) for details on:
-
-- Available reasoning models
-- How to use the reasoning API
-- Streaming reasoning responses
-- Understanding reasoning effort levels
-- Controlling reasoning budget
-
-## For Users
-- **Slogan:** One Key, One API, Hundreds of Models
-- **Description:** A unified API interface for all modern LLMs, enabling seamless model switching and performance optimization.
-- **Benefits:**
-  - Single payment for multiple models.
-  - Simplified model switching.
-  - Optimized performance and cost-efficiency.
-  - Enhanced reasoning capabilities for complex problems.
-
-
-
-## Others
-
-- Create a clean pip requirements: `pip list --format=freeze > requirements.txt`
+Apache-2.0. See [LICENSE](LICENSE).

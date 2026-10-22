@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --all-groups
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Test (no network)
+        run: uv run pytest
+      - name: Smoke the CLI
+        run: uv run omni --version
+
+  secrets:
+    # The gitleaks CLI is used directly rather than gitleaks/gitleaks-action: the action
+    # needs a token that can read PR commits (403 with the default GITHUB_TOKEN) and a
+    # GITLEAKS_LICENSE on organization-owned repositories. The CLI needs neither.
+    #
+    # Only the commits introduced by the push or PR are scanned, because the pre-v2 history
+    # of this repository is known to contain a credential file that is being removed by a
+    # history rewrite. Switch to a full-history scan (drop --log-opts) once that lands.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan the new commits with gitleaks
+        env:
+          GITLEAKS_VERSION: 8.21.2
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          if git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            ./gitleaks git --redact --verbose --exit-code 1 --log-opts="${BASE_SHA}..HEAD" .
+          else
+            echo "base commit ${BASE_SHA} not available (new branch or first push); scanning HEAD only"
+            ./gitleaks git --redact --verbose --exit-code 1 --log-opts="-1" .
+          fi

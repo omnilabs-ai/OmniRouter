@@ -15,8 +15,6 @@ from omni.cli import app
 from omni.db import alembic_config, get_engine, session_scope
 from omni.models import ModelCatalog
 
-ROOT = Path(__file__).resolve().parents[1]
-
 GOOD = """
 version: 1
 models:
@@ -88,7 +86,8 @@ def test_duplicate_model_id_is_an_error(tmp_path):
 
 
 def test_bundled_catalog_is_valid_and_dated():
-    entries = load(ROOT / DEFAULT_CATALOG_PATH)
+    entries = load(DEFAULT_CATALOG_PATH)
+    assert DEFAULT_CATALOG_PATH.is_file()
     assert 6 <= len(entries) <= 10
     assert {e.provider for e in entries} >= {"anthropic", "openai", "google"}
     assert all(e.source_url.startswith("https://") for e in entries)
@@ -173,6 +172,15 @@ def test_sync_insert_update_deprecate(tmp_path, engine):
 
 
 # ----------------------------------------------------------------------------- cli
+
+
+def test_cli_sync_uses_bundled_catalog_from_any_cwd(tmp_path, engine, monkeypatch):
+    """Regression: the catalog ships inside the package, so `omni catalog sync` must work
+    from a directory that is not the repository root (an installed CLI)."""
+    monkeypatch.chdir(tmp_path)
+    r = CliRunner().invoke(app, ["catalog", "sync"])
+    assert r.exit_code == 0, r.output
+    assert "inserted 8" in r.output
 
 
 def test_cli_sync_and_show(tmp_path, engine):

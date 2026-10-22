@@ -85,14 +85,16 @@ def db_revision(
 
 @catalog_app.command("sync")
 def catalog_sync(
-    file: Annotated[Path, typer.Option("--file", help="catalog YAML to load")] = Path(
-        "catalog/models.yaml"
-    ),
+    file: Annotated[
+        Path | None,
+        typer.Option("--file", help="catalog YAML to load (default: the bundled catalog)"),
+    ] = None,
 ) -> None:
     """Validate the catalog file and upsert it into the model_catalog table."""
-    from omni.catalog import CatalogError, load, sync
+    from omni.catalog import DEFAULT_CATALOG_PATH, CatalogError, load, sync
     from omni.db import session_scope
 
+    file = file or DEFAULT_CATALOG_PATH
     try:
         entries = load(file)
     except CatalogError as e:

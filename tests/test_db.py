@@ -11,9 +11,10 @@ from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from sqlalchemy import inspect, select
 from sqlalchemy.engine import make_url
+from typer.testing import CliRunner
 
-from omni.cli import alembic_config
-from omni.db import get_engine, session_scope
+from omni.cli import app
+from omni.db import alembic_config, get_engine, session_scope
 from omni.models import Base, ModelCatalog, Outcome, Request, Workload
 
 
@@ -63,6 +64,22 @@ def test_default_sqlite_lives_under_dot_omni(tmp_path, monkeypatch):
     with engine.connect():
         pass
     assert (tmp_path / ".omni" / "omni.db").exists()
+
+
+def test_cli_db_upgrade_on_fresh_checkout(tmp_path, monkeypatch):
+    """`omni db upgrade` in an empty directory must create .omni/ itself.
+
+    Regression test: the Alembic environment opens its own engine, so the directory
+    creation in get_engine() did not apply and a fresh checkout failed with
+    "unable to open database file".
+    """
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    result = CliRunner().invoke(app, ["db", "upgrade"])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / ".omni" / "omni.db").exists()
+    tables = set(inspect(get_engine()).get_table_names())
+    assert {"workloads", "requests", "outcomes", "model_catalog", "alembic_version"} <= tables
 
 
 def test_database_url_env_wins(monkeypatch, db_url):

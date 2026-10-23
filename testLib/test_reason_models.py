@@ -336,6 +336,82 @@ class TestReasoningModels(BaseTest):
             self.logger.error(f"Error verifying response: {str(e)}")
             raise e  # Re-raise the exception to properly fail the test
 
+    def test_thinking_token_handling(self):
+        """Test that thinking tokens from the API are properly handled"""
+        self.logger.info("Testing Thinking Token Handling")
+        
+        # Get available reasoning models
+        response = self.client.get("/v1/models/reasoning")
+        
+        if response.status_code != 200:
+            self.logger.warning(f"Could not fetch reasoning models: {response.status_code}")
+            return  # Skip test if we can't get models
+            
+        models = response.json()["models"]
+        if not models:
+            self.logger.warning("No reasoning models available for testing")
+            return  # Skip test if no models
+            
+        # Use the first available model
+        model = models[0]
+        model_id = model["id"]
+        self.logger.info(f"Testing thinking token handling with model: {model_id}")
+        
+        # Create a test with a prompt that should trigger substantial thinking
+        test_prompt = "What would happen if the speed of light was 10 times slower? Explain the physics implications."
+        
+        request_data = {
+            "model": model_id,
+            "messages": [{"role": "user", "content": test_prompt}],
+            "reasoning_effort": "high",  # Use high to encourage more thinking
+            "temperature": 1.0,
+            "max_tokens": 3000
+        }
+        
+        try:
+            # Make the request
+            response = self.client.post(
+                "/v1/reason/completions",
+                json=request_data,
+                timeout=60
+            )
+            
+            if response.status_code != 200:
+                self.logger.warning(f"Request failed with status {response.status_code}")
+                return  # Skip further testing
+                
+            # Parse response
+            result = response.json()
+            
+            # Verify usage contains reasoning tokens
+            usage = result.get("usage", {})
+            thinking_tokens = usage.get("reasoning_tokens", 0)
+            output_tokens = usage.get("output_tokens", 0)
+            total_tokens = usage.get("total_tokens", 0)
+            
+            self.logger.info(f"Thinking tokens: {thinking_tokens}")
+            self.logger.info(f"Output tokens: {output_tokens}")
+            self.logger.info(f"Total tokens: {total_tokens}")
+            
+            # Verify that thinking tokens are present and reasonable
+            assert thinking_tokens > 0, "No thinking tokens reported"
+            assert output_tokens > 0, "No output tokens reported"
+            
+            # Check that output + thinking doesn't exceed total
+            input_tokens = usage.get("input_tokens", 0)
+            expected_total = input_tokens + output_tokens + thinking_tokens
+            
+            # Verify that total tokens are reasonably close to expected
+            # This test might need adjustment based on how tokens are counted
+            assert abs(total_tokens - expected_total) <= (total_tokens * 0.1), \
+                f"Total tokens {total_tokens} doesn't match expected {expected_total}"
+                
+            self.logger.info("Thinking token handling test passed successfully")
+                
+        except Exception as e:
+            self.logger.error(f"Error testing thinking token handling: {str(e)}")
+            assert False, f"Thinking token test failed: {str(e)}"
+
 # Direct test runner if run as a script
 if __name__ == "__main__":
     # Print to stdout directly

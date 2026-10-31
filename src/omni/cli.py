@@ -26,6 +26,8 @@ workloads_app = typer.Typer(help="Workloads: segmentation, stats, merges.", no_a
 app.add_typer(workloads_app, name="workloads")
 sample_app = typer.Typer(help="Samples: stratified subsets and golden sets.", no_args_is_help=True)
 app.add_typer(sample_app, name="sample")
+replay_app = typer.Typer(help="Shadow replays of samples against candidates.", no_args_is_help=True)
+app.add_typer(replay_app, name="replay")
 
 
 def _show_version(value: bool) -> None:
@@ -391,6 +393,127 @@ def sample_show(sample_id: str) -> None:
             else ""
         )
         typer.echo("  request_ids: " + ", ".join(head) + more)
+
+
+# ----------------------------------------------------------------------------- replay
+
+
+def _resolve_sample(session, wl, ref: str):
+    from omni.models import Sample
+    from omni.sampling import golden, list_samples
+
+    if ref == "latest":
+        rows = list_samples(session, wl)
+        smp = rows[-1] if rows else None
+    elif ref == "golden":
+        smp = golden(session, wl)
+    else:
+        smp = session.get(Sample, ref)
+    if smp is None or smp.workload_id != wl.workload_id:
+        _fail(f"no sample {ref!r} for workload {wl.name} (omni sample create)")
+    return smp
+
+
+@replay_app.command("run")
+def replay_run(
+    workload: Annotated[str, typer.Option(help="workload id or name")],
+    candidates: Annotated[str, typer.Option(help="comma list of model_id[@effort]")],
+    sample: Annotated[str, typer.Option(help="sample id, 'latest' or 'golden'")] = "latest",
+    budget: Annotated[float, typer.Option(help="USD cap per candidate run")] = 5.0,
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="estimate cost, send nothing")] = False,
+) -> None:
+    """Replay a sample against candidate models, one budgeted run per candidate (ADR 0008)."""
+    from omni.catalog import CatalogError
+    from omni.db import session_scope
+    from omni.ingest.store import ObjectStore
+    from omni.replay import Candidate, MissingApiKey, UnsupportedParameter, run_replay
+
+    specs = [Candidate.parse(c) for c in candidates.split(",") if c.strip()]
+    if not specs:
+        _fail("--candidates is empty")
+    store = ObjectStore()
+    with session_scope() as s:
+        wl = _workload(s, workload)
+        smp = _resolve_sample(s, wl, sample)
+        typer.echo(
+            f"replaying {wl.name} sample {smp.sample_id} v{smp.version} (n={smp.size}) "
+            f"against {len(specs)} candidate(s), budget ${budget:.2f} each"
+            f"{' [dry run]' if dry_run else ''}"
+        )
+        typer.echo(
+            f"{'candidate':<32} {'run':<22} {'status':<16} "
+            f"{'sent':>5} {'errors':>6} {'spent':>10} {'estimate':>10}"
+        )
+        for cand in specs:
+            try:
+                r = run_replay(s, store, smp, cand, budget, dry_run=dry_run)
+            except (CatalogError, UnsupportedParameter, MissingApiKey) as e:
+                typer.echo(f"{cand.label:<32} {'-':<22} {'not started':<16} {e}")
+                continue
+            run_id = r.run.run_id if r.run else "-"
+            typer.echo(
+                f"{cand.label:<32} {run_id:<22} {r.status:<16} {r.sent:>5} {r.errors:>6} "
+                f"{r.spent_usd:>10.4f} {r.estimated_usd:>10.4f}"
+            )
+            for w in r.warnings:
+                typer.echo(f"  warning: {w}")
+        if dry_run:
+            s.rollback()
+
+
+@replay_app.command("list")
+def replay_list(
+    workload: Annotated[str | None, typer.Option(help="workload id or name")] = None,
+) -> None:
+    """List replay runs, newest first."""
+    from sqlalchemy import select
+
+    from omni.db import session_scope
+    from omni.models import ReplayRun
+
+    with session_scope() as s:
+        q = select(ReplayRun).order_by(ReplayRun.started_at.desc())
+        if workload:
+            q = q.where(ReplayRun.workload_id == _workload(s, workload).workload_id)
+        typer.echo(
+            f"{'run_id':<22} {'candidate':<32} {'status':<16} "
+            f"{'spent':>10} {'budget':>8} {'errors':>6}  sample"
+        )
+        for r in s.scalars(q):
+            typer.echo(
+                f"{r.run_id:<22} {r.candidate_label[:32]:<32} {r.status:<16} {r.spent_usd:>10.4f} "
+                f"{r.budget_usd:>8.2f} {r.error_count:>6}  {r.sample_id}"
+            )
+
+
+@replay_app.command("show")
+def replay_show(run_id: str) -> None:
+    """Print a run and its per-request results."""
+    from omni.db import session_scope
+    from omni.models import ReplayRun
+
+    with session_scope() as s:
+        r = s.get(ReplayRun, run_id)
+        if r is None:
+            _fail(f"run {run_id!r} not found")
+        typer.echo(
+            f"{r.run_id} {r.candidate_label} status={r.status} adapter={r.adapter_name} "
+            f"spent=${r.spent_usd:.4f} of ${r.budget_usd:.2f} "
+            f"errors={r.error_count} sample={r.sample_id}"
+        )
+        for w in r.warnings or []:
+            typer.echo(f"  warning: {w}")
+        typer.echo(
+            f"  {'request':<14} {'cost':>10} {'ms':>7} {'in':>6} {'out':>5} "
+            f"{'cached':>6} {'reason':>6}  error"
+        )
+        for res in r.results:
+            u = res.usage or {}
+            typer.echo(
+                f"  {res.request_id:<14} {(res.cost or 0):>10.6f} {(res.latency_ms or 0):>7.0f} "
+                f"{u.get('input', 0):>6} {u.get('output', 0):>5} {u.get('cached_input', 0):>6} "
+                f"{u.get('reasoning', 0):>6}  {res.error or ''}"
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover

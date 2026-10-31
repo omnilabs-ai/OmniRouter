@@ -42,6 +42,9 @@ def test_migration_creates_every_table(migrated_engine):
             "requests",
             "outcomes",
             "samples",
+            "candidate_pools",
+            "replay_runs",
+            "replay_results",
         }
     )
 

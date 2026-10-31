@@ -172,3 +172,72 @@ class Sample(TenantMixin, Base):
             "ix_samples_tenant_workload_version", "tenant_id", "workload_id", "version", unique=True
         ),
     )
+
+
+# --------------------------------------------------------------------------- replay (ADR 0008)
+
+
+class CandidatePool(TenantMixin, Base):
+    """The versioned list of candidate models (with effort) a workload is replayed against."""
+
+    __tablename__ = "candidate_pools"
+
+    pool_id: Mapped[str] = mapped_column(
+        String(40), primary_key=True, default=lambda: new_id("pool")
+    )
+    workload_id: Mapped[str] = mapped_column(ForeignKey("workloads.workload_id"), index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    candidates: Mapped[list[Any]] = mapped_column(JSON)  # [{model_id, effort}]
+    rationale: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[str] = mapped_column(String(16), default="user")  # user | auto
+
+
+class ReplayRun(TenantMixin, Base):
+    """One candidate replayed over one sample, under one budget."""
+
+    __tablename__ = "replay_runs"
+
+    run_id: Mapped[str] = mapped_column(String(40), primary_key=True, default=lambda: new_id("run"))
+    workload_id: Mapped[str] = mapped_column(ForeignKey("workloads.workload_id"), index=True)
+    sample_id: Mapped[str] = mapped_column(ForeignKey("samples.sample_id"), index=True)
+    pool_id: Mapped[str | None] = mapped_column(ForeignKey("candidate_pools.pool_id"))
+    candidate: Mapped[dict[str, Any]] = mapped_column(JSON)  # {model_id, effort}
+    mode: Mapped[str] = mapped_column(String(24), default="single_turn")
+    status: Mapped[str] = mapped_column(String(24), default="running")
+    # running | done | budget_exhausted | failed
+    budget_usd: Mapped[float] = mapped_column(Float)
+    spent_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_count: Mapped[int] = mapped_column(Integer, default=0)
+    adapter_name: Mapped[str] = mapped_column(String(32))
+    warnings: Mapped[list[Any]] = mapped_column(JSON, default=list)
+
+    results: Mapped[list[ReplayResult]] = relationship(back_populates="run")
+
+    @property
+    def candidate_label(self) -> str:
+        effort = (self.candidate or {}).get("effort")
+        model_id = (self.candidate or {}).get("model_id", "?")
+        return f"{model_id}@{effort}" if effort else model_id
+
+
+class ReplayResult(TenantMixin, Base):
+    """The candidate's answer to one sampled request; content lives in the object store."""
+
+    __tablename__ = "replay_results"
+
+    result_id: Mapped[str] = mapped_column(
+        String(40), primary_key=True, default=lambda: new_id("res")
+    )
+    run_id: Mapped[str] = mapped_column(ForeignKey("replay_runs.run_id"), index=True)
+    request_id: Mapped[str] = mapped_column(ForeignKey("requests.request_id"), index=True)
+    output_ref: Mapped[str | None] = mapped_column(String(160))
+    usage: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    cost: Mapped[float | None] = mapped_column(Float)
+    latency_ms: Mapped[float | None] = mapped_column(Float)
+    error: Mapped[str | None] = mapped_column(Text)
+    mapped_params: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    provider_region: Mapped[str | None] = mapped_column(String(32))
+
+    run: Mapped[ReplayRun] = relationship(back_populates="results")

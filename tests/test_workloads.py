@@ -228,7 +228,7 @@ def test_merge_moves_requests_and_routes_future_imports(env, tmp_path):
         import_file(s, FIXTURE)
         src = s.get(Request, "req_0017").workload  # triage one-off
         dst = s.get(Request, "req_0001").workload  # concise-assistant family
-        src_key, src_id, dst_id = src.fingerprint_key, src.workload_id, dst.workload_id
+        src_key, dst_id = src.fingerprint_key, dst.workload_id
         assert merge(s, src, dst) == 1
         assert src.name.startswith("merged:") and src.merge_rules == {"merged_into": dst_id}
         assert dst.merge_rules["absorbed"] == [src_key]

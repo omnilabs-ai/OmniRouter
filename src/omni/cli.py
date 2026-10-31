@@ -24,6 +24,8 @@ app.add_typer(db_app, name="db")
 app.add_typer(catalog_app, name="catalog")
 workloads_app = typer.Typer(help="Workloads: segmentation, stats, merges.", no_args_is_help=True)
 app.add_typer(workloads_app, name="workloads")
+sample_app = typer.Typer(help="Samples: stratified subsets and golden sets.", no_args_is_help=True)
+app.add_typer(sample_app, name="sample")
 
 
 def _show_version(value: bool) -> None:
@@ -280,6 +282,115 @@ def workloads_merge(src: str, dst: str) -> None:
             _fail(str(e))
         refresh(s)
         typer.echo(f"moved {moved} requests from {a.name} into {b.name}")
+
+
+# ----------------------------------------------------------------------------- sample
+
+
+def _parse_ts(value: str | None, name: str):
+    from datetime import UTC, datetime
+
+    if value is None:
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        _fail(f"--{name} must be an ISO-8601 timestamp, got {value!r}")
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+
+
+def _strata_table(counts: dict) -> str:
+    rows = [f"  {'stratum':<40} {'population':>10} {'sampled':>8}"]
+    for s in sorted(counts):
+        c = counts[s]
+        rows.append(f"  {s:<40} {c['population']:>10} {c['sampled']:>8}")
+    return "\n".join(rows)
+
+
+@sample_app.command("create")
+def sample_create(
+    workload: Annotated[str, typer.Option(help="workload id or name")],
+    size: Annotated[int | None, typer.Option(help="explicit size; default from --ci")] = None,
+    ci: Annotated[float, typer.Option(help="target 95% CI half-width for a win rate")] = 0.05,
+    golden: Annotated[bool, typer.Option("--golden", help="mark as the golden set")] = False,
+    since: Annotated[str | None, typer.Option(help="ISO timestamp, inclusive")] = None,
+    until: Annotated[str | None, typer.Option(help="ISO timestamp, exclusive")] = None,
+    seed: Annotated[int | None, typer.Option(help="RNG seed; stored on the sample")] = None,
+) -> None:
+    """Create a new, immutable stratified sample version for a workload (ADR 0007)."""
+    from omni.db import session_scope
+    from omni.sampling import SamplingError, create_sample
+
+    with session_scope() as s:
+        wl = _workload(s, workload)
+        try:
+            smp = create_sample(
+                s,
+                wl,
+                size=size,
+                ci_half_width=ci,
+                golden=golden,
+                since=_parse_ts(since, "since"),
+                until=_parse_ts(until, "until"),
+                seed=seed,
+            )
+        except SamplingError as e:
+            _fail(str(e))
+        typer.echo(
+            f"{smp.sample_id} v{smp.version} for {wl.name}: {smp.size} requests "
+            f"(eligible {smp.created_from_range['eligible']}, seed {smp.seed}"
+            f"{', golden' if smp.is_golden else ''})"
+        )
+        typer.echo(_strata_table(smp.strata_def["counts"]))
+
+
+@sample_app.command("list")
+def sample_list(
+    workload: Annotated[str | None, typer.Option(help="workload id or name")] = None,
+) -> None:
+    """List samples, oldest version first."""
+    from omni.db import session_scope
+    from omni.sampling import list_samples
+
+    with session_scope() as s:
+        wl = _workload(s, workload) if workload else None
+        rows = list_samples(s, wl)
+        typer.echo(f"{'sample_id':<22} {'workload':<24} {'ver':>3} {'size':>5} golden  created")
+        for smp in rows:
+            typer.echo(
+                f"{smp.sample_id:<22} {smp.workload.name[:24]:<24} {smp.version:>3} {smp.size:>5} "
+                f"{'yes' if smp.is_golden else 'no':<6}  {smp.created_at:%Y-%m-%d %H:%M}"
+            )
+
+
+@sample_app.command("show")
+def sample_show(sample_id: str) -> None:
+    """Print a sample's strata table and the first request ids."""
+    from omni.db import session_scope
+    from omni.models import Sample
+
+    with session_scope() as s:
+        smp = s.get(Sample, sample_id)
+        if smp is None:
+            _fail(f"sample {sample_id!r} not found")
+        rng = smp.created_from_range
+        typer.echo(
+            f"{smp.sample_id} v{smp.version} workload={smp.workload.name} size={smp.size} "
+            f"golden={smp.is_golden} seed={smp.seed} strata={smp.strata_def['version']} "
+            f"redaction={smp.redaction_version}"
+        )
+        typer.echo(
+            f"  range: {rng.get('first_ts')} .. {rng.get('last_ts')} "
+            f"(eligible {rng.get('eligible')})"
+        )
+        typer.echo(_strata_table(smp.strata_def["counts"]))
+        head = smp.request_ids[:10]
+        more = (
+            f" ... (+{len(smp.request_ids) - len(head)})"
+            if len(smp.request_ids) > len(head)
+            else ""
+        )
+        typer.echo("  request_ids: " + ", ".join(head) + more)
 
 
 if __name__ == "__main__":  # pragma: no cover

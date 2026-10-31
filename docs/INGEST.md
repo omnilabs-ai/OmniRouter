@@ -3,13 +3,14 @@
 `omni ingest --from FILE.jsonl` reads one JSON object per line, each a `NormalizedRequest`.
 Collectors (LiteLLM logger, OTLP receiver, sidecar) produce the same shape. Unknown keys are
 rejected so typos are caught at import time. Lines that fail validation are reported with
-their line number and skipped; the import continues.
+their line number and skipped; the import continues. Blank lines and lines starting with `#`
+are ignored, so a file can carry a header comment.
 
 ## Fields
 
 | Field | Type | Notes |
 |---|---|---|
-| `request_id` | string, required | Unique per request; primary key. Re-importing the same id is a no-op. |
+| `request_id` | string, required | Unique per request; primary key. Re-importing an identical line is a no-op; the same id with different content (including a different `source`, since `--source` rewrites the field before hashing) is reported as a conflict and not applied. |
 | `ts` | ISO-8601 datetime, required | Naive timestamps are taken as UTC. |
 | `source` | `litellm` \| `otel` \| `sidecar` \| `import` | Default `import`; `--source` overrides. |
 | `model_requested`, `model_resolved` | string | Provider-native ids as in the catalog. Cost uses `model_resolved`, else `model_requested`. |

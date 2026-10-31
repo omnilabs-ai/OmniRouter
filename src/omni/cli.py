@@ -136,5 +136,42 @@ def catalog_show(
         typer.echo(f"  example 10k in / 1k out: ${cost_of(example, p)}")
 
 
+# ----------------------------------------------------------------------------- ingest
+
+
+@app.command("ingest")
+def ingest(
+    from_path: Annotated[
+        Path, typer.Option("--from", help="JSONL file of NormalizedRequest lines")
+    ],
+    source: Annotated[
+        str | None, typer.Option(help="override the source field: litellm|otel|sidecar|import")
+    ] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="validate and redact, write nothing")
+    ] = False,
+) -> None:
+    """Import production requests from a JSONL file (docs/INGEST.md)."""
+    from omni.db import session_scope
+    from omni.ingest import import_file
+
+    if not from_path.exists():
+        _fail(f"{from_path} does not exist")
+    with session_scope() as s:
+        r = import_file(s, from_path, source=source, dry_run=dry_run)
+        if dry_run:
+            s.rollback()
+    verb = "would insert" if dry_run else "inserted"
+    typer.echo(
+        f"{from_path}: {r.total} lines; {verb} {r.inserted}, skipped {r.skipped} "
+        f"(already present), conflicts {r.conflicts}, invalid {len(r.invalid)}; "
+        f"cost filled from catalog for {r.costed}"
+    )
+    if r.redactions:
+        typer.echo("redacted: " + ", ".join(f"{k}={v}" for k, v in sorted(r.redactions.items())))
+    for lineno, err in r.invalid:
+        typer.echo(f"  line {lineno}: {err}", err=True)
+
+
 if __name__ == "__main__":  # pragma: no cover
     app()

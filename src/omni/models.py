@@ -104,6 +104,7 @@ class Request(TenantMixin, Base):
     params: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     tools_hash: Mapped[str | None] = mapped_column(String(80))
     content_ref: Mapped[str | None] = mapped_column(String(160))  # object store key, redacted
+    raw_hash: Mapped[str | None] = mapped_column(String(64))  # sha256 of the unredacted record
     # {input, output, cached_input, reasoning}
     usage: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     cost: Mapped[float | None] = mapped_column(Float)

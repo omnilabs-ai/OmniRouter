@@ -1,0 +1,39 @@
+version: 1
+updated: "2026-10-31"
+
+models:
+  - model_id: openai/gpt-4o-mini
+    provider: openai
+    display_name: GPT-4o mini
+    context_window: 128000
+    max_output: 16384
+    capabilities:
+      tools: true
+      vision: true
+      json_mode: true
+    pricing:
+      input: 0.15
+      output: 0.60
+      cached_input: 0.075
+      reasoning: 0.60
+      per_request: 0
+    regions: []
+    status: active
+
+  - model_id: anthropic/claude-3-5-haiku
+    provider: anthropic
+    display_name: Claude 3.5 Haiku
+    context_window: 200000
+    max_output: 8192
+    capabilities:
+      tools: true
+      vision: true
+      json_mode: false
+    pricing:
+      input: 0.80
+      output: 4.00
+      cached_input: 0.08
+      reasoning: 4.00
+      per_request: 0
+    regions: []
+    status: active

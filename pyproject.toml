@@ -9,6 +9,7 @@ license = "Apache-2.0"
 requires-python = ">=3.12"
 authors = [{ name = "omnilabs-ai" }]
 dependencies = [
+    "PyYAML>=6.0",
     "alembic>=1.13",
     "sqlalchemy>=2.0.30",
     "typer>=0.12",

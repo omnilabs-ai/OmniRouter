@@ -41,6 +41,7 @@ def test_migration_creates_every_table(migrated_engine):
             "workloads",
             "requests",
             "outcomes",
+            "samples",
         }
     )
 

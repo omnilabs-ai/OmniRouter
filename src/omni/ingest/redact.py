@@ -24,6 +24,8 @@ import yaml
 from omni.ingest.schema import NormalizedRequest
 
 DEFAULT_REDACTION_FILE = Path(".omni") / "redaction.yaml"
+# Bump when the built-in detectors or placeholder format change; samples pin it (ADR 0007).
+REDACTION_VERSION = "regex-v1"
 
 _BUILTIN: list[tuple[str, re.Pattern[str]]] = [
     # Bearer before JWT: "Bearer <jwt>" is one secret, not a word plus a token.

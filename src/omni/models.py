@@ -141,3 +141,34 @@ class Outcome(TenantMixin, Base):
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     request: Mapped[Request] = relationship(back_populates="outcomes")
+
+
+class Sample(TenantMixin, Base):
+    """An immutable, versioned, stratified subset of a workload's requests (ADR 0007).
+
+    A new sample is always a new version; nothing updates a sample in place. ``is_golden``
+    marks the version used for drift checks against the incumbent.
+    """
+
+    __tablename__ = "samples"
+
+    sample_id: Mapped[str] = mapped_column(
+        String(40), primary_key=True, default=lambda: new_id("smp")
+    )
+    workload_id: Mapped[str] = mapped_column(ForeignKey("workloads.workload_id"), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    strata_def: Mapped[dict[str, Any]] = mapped_column(JSON)  # scheme used, with its version
+    request_ids: Mapped[list[Any]] = mapped_column(JSON)  # ordered
+    size: Mapped[int] = mapped_column(Integer)
+    is_golden: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_from_range: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)  # {since, until}
+    seed: Mapped[int] = mapped_column(Integer)
+    redaction_version: Mapped[str] = mapped_column(String(32))
+
+    workload: Mapped[Workload] = relationship()
+
+    __table_args__ = (
+        Index(
+            "ix_samples_tenant_workload_version", "tenant_id", "workload_id", "version", unique=True
+        ),
+    )

@@ -112,8 +112,10 @@ def test_import_fixture_then_reimport_is_noop(env):
 
     with session_scope(engine) as s:
         assert s.scalar(select(func.count()).select_from(Request)) == 20
-        wl = s.scalar(select(Workload))
-        assert wl.name == "unassigned" and len(wl.requests) == 20
+        workloads = s.scalars(select(Workload)).all()
+        assert "unassigned" not in {w.name for w in workloads}  # every line has messages
+        assert sum(len(w.requests) for w in workloads) == 20
+        assert len(r.workloads_created) == len(workloads)
         given = s.get(Request, "req_0004")
         assert given.cost == pytest.approx(0.0042)  # kept as given
         computed = s.get(Request, "req_0001")  # haiku: 317 in / 41 out

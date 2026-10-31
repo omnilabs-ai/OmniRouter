@@ -26,6 +26,7 @@ are ignored, so a file can carry a header comment.
 | `fallback_chain` | list of strings | Models tried, in order. |
 | `session_id`, `step_index` | string, int | Agent sessions: step k of the session. |
 | `compaction_event` | bool | True when this step followed a context compaction. |
+| `app_tag` | string | Optional label for the application or route that made the call (e.g. `support-triage`). Part of the workload fingerprint (ADR 0006); tag the app, not the deployment. |
 
 Everything in `messages`, `tools` arguments and `response` is redacted before it is stored
 (ADR 0005); the database row keeps only metadata and a `content_ref` key.
@@ -42,7 +43,13 @@ Everything in `messages`, `tools` arguments and `response` is redacted before it
 uv run omni db upgrade
 uv run omni catalog sync                       # so costs can be computed
 uv run omni ingest --from traffic.jsonl        # add --dry-run to validate and redact without writing
+uv run omni workloads refresh                  # volume, spend, token mix, cache ratio, incumbent per workload
+uv run omni workloads list --sort spend        # stats are zero until refresh has run
 ```
+
+Requests are attached to workloads by fingerprint at import time (ADR 0006); `omni workloads
+segment` re-attaches anything left in `unassigned`, and `--all` re-fingerprints everything after
+a heuristics change.
 
 Objects land in `.omni/objects/` (override with `OMNI_OBJECT_DIR`); custom redaction patterns
 go in `.omni/redaction.yaml` as `patterns: [{name: TICKET, regex: "TKT-\\d{6}"}]`.

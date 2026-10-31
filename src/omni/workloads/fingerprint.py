@@ -94,10 +94,11 @@ def derive_step_kind(
     has_prior_assistant = any(m.get("role") == "assistant" for m in messages)
     if step_index == 0 or not has_prior_assistant:
         return FIRST_TURN
-    last_is_tool_result = bool(messages) and messages[-1].get("role") == "tool"
-    if last_is_tool_result or (response and response.get("tool_calls")):
-        return TOOL_STEP
-    return TOOL_STEP  # tools offered mid-session with a plain user turn: still agent traffic
+    # Tools offered mid-session: a tool result, a tool-calling response, or even a plain user
+    # turn are all agent traffic. Only `response` is unused here; it is kept in the signature
+    # so a finer rule can use it without changing callers.
+    del response
+    return TOOL_STEP
 
 
 @dataclass(frozen=True)

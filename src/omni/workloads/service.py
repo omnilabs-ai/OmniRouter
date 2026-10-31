@@ -90,7 +90,11 @@ def segment(
     before = set(resolver.by_key)
     q = select(Request).where(Request.tenant_id == tenant_id)
     if not all_requests:
-        q = q.where(Request.workload_id == resolver.unassigned().workload_id)
+        # Look the placeholder up without creating it: a no-op segmentation writes nothing.
+        unassigned = resolver.by_key.get(UNASSIGNED)
+        if unassigned is None:
+            return result
+        q = q.where(Request.workload_id == unassigned.workload_id)
     for req in session.scalars(q):
         if not req.content_ref or not store.exists(req.content_ref):
             result.no_content += 1

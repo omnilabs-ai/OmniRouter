@@ -288,3 +288,19 @@ def test_cli_list_rename_merge_segment(env):
     assert r.exit_code == 1
     r = runner.invoke(app, ["workloads", "rename", "nope", "x"])
     assert r.exit_code == 1 and "not found" in r.output
+
+
+def test_segment_noop_creates_no_workloads(env):
+    """Regression: `omni workloads segment` on a database with nothing unassigned must not
+    create the `unassigned` placeholder (or anything else) as a side effect."""
+    from sqlalchemy import func, select
+
+    from omni.models import Workload
+    from omni.workloads import segment
+
+    engine, _ = env
+    with session_scope(engine) as s:
+        r = segment(s)
+    assert (r.moved, r.unchanged, r.no_content, r.created) == (0, 0, 0, [])
+    with session_scope(engine) as s:
+        assert s.scalar(select(func.count()).select_from(Workload)) == 0

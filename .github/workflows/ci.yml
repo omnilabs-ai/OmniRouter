@@ -30,23 +30,16 @@ jobs:
     # needs a token that can read PR commits (403 with the default GITHUB_TOKEN) and a
     # GITLEAKS_LICENSE on organization-owned repositories. The CLI needs neither.
     #
-    # Only the commits introduced by the push or PR are scanned, because the pre-v2 history
-    # of this repository is known to contain a credential file that is being removed by a
-    # history rewrite. Switch to a full-history scan (drop --log-opts) once that lands.
+    # Full history is scanned on every run. The pre-v2 credential file was purged from all
+    # branches by a history rewrite on 2026-10-31, so a hit anywhere now means a new leak.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Scan the new commits with gitleaks
+      - name: Scan the full history with gitleaks
         env:
           GITLEAKS_VERSION: 8.21.2
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
-          if git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
-            ./gitleaks git --redact --verbose --exit-code 1 --log-opts="${BASE_SHA}..HEAD" .
-          else
-            echo "base commit ${BASE_SHA} not available (new branch or first push); scanning HEAD only"
-            ./gitleaks git --redact --verbose --exit-code 1 --log-opts="-1" .
-          fi
+          ./gitleaks git --redact --verbose --exit-code 1 .

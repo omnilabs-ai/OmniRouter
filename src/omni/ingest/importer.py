@@ -1,8 +1,8 @@
-"""JSONL importer: validate -> redact -> store by reference -> upsert ``Request`` rows.
+"""JSONL importer: validate -> redact -> fingerprint -> store by reference -> insert ``Request``.
 
 Idempotent on ``request_id``. Invalid lines are collected with their line number and never
-abort the run. Until segmentation lands (PR 5) every request is attached to a placeholder
-workload named ``unassigned``.
+abort the run. Each request is attached to the workload with its fingerprint (ADR 0006);
+requests with no messages at all go to the ``unassigned`` placeholder.
 """
 
 from __future__ import annotations
@@ -22,9 +22,9 @@ from omni.catalog import CatalogError, cost_of, load
 from omni.ingest.redact import load_custom_patterns, redact_request
 from omni.ingest.schema import NormalizedRequest
 from omni.ingest.store import ObjectStore
-from omni.models import ModelCatalog, Request, Workload
-
-UNASSIGNED = "unassigned"
+from omni.models import ModelCatalog, Request
+from omni.workloads.fingerprint import fingerprint
+from omni.workloads.service import WorkloadResolver
 
 
 @dataclass
@@ -35,6 +35,7 @@ class ImportResult:
     invalid: list[tuple[int, str]] = field(default_factory=list)
     redactions: Counter[str] = field(default_factory=Counter)
     costed: int = 0  # cost filled in from the catalog
+    workloads_created: list[str] = field(default_factory=list)
     dry_run: bool = False
 
     @property
@@ -64,24 +65,6 @@ def _pricing_index(session: Session) -> dict[str, dict[str, Any]]:
     return {e.model_id: e.pricing.model_dump() for e in load()}
 
 
-def _unassigned_workload(session: Session, tenant_id: str) -> Workload:
-    wl = session.scalar(
-        select(Workload).where(
-            Workload.tenant_id == tenant_id, Workload.fingerprint_key == UNASSIGNED
-        )
-    )
-    if wl is None:
-        wl = Workload(
-            tenant_id=tenant_id,
-            name=UNASSIGNED,
-            fingerprint={"kind": UNASSIGNED},
-            fingerprint_key=UNASSIGNED,
-        )
-        session.add(wl)
-        session.flush()
-    return wl
-
-
 def import_file(
     session: Session,
     path: Path | str,
@@ -94,7 +77,8 @@ def import_file(
     result = ImportResult(dry_run=dry_run)
     custom = load_custom_patterns()
     pricing = _pricing_index(session)
-    workload = None if dry_run else _unassigned_workload(session, tenant_id)
+    resolver = None if dry_run else WorkloadResolver(session, tenant_id)
+    known_keys = set(resolver.by_key) if resolver else set()
 
     for lineno, line in iter_lines(path):
         try:
@@ -126,10 +110,15 @@ def import_file(
             except CatalogError:
                 cost = None
 
+        fp = fingerprint(redacted) if redacted.messages else None
         if dry_run:
             result.inserted += 1
             continue
 
+        workload = resolver.resolve(fp) if fp else resolver.unassigned()
+        if workload.fingerprint_key not in known_keys:
+            known_keys.add(workload.fingerprint_key)
+            result.workloads_created.append(workload.name)
         content_ref = store.put(redacted.content_payload())
         session.add(
             Request(
@@ -153,6 +142,7 @@ def import_file(
                 fallback_chain=rec.fallback_chain,
                 session_id=rec.session_id,
                 step_index=rec.step_index,
+                step_kind=fp.step_kind if fp else None,
                 compaction_event=rec.compaction_event,
             )
         )

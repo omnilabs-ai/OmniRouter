@@ -114,6 +114,9 @@ class Request(TenantMixin, Base):
     fallback_chain: Mapped[list[Any]] = mapped_column(JSON, default=list)
     session_id: Mapped[str | None] = mapped_column(String(120), index=True)
     step_index: Mapped[int | None] = mapped_column(Integer)
+    step_kind: Mapped[str | None] = mapped_column(
+        String(16)
+    )  # chat|first_turn|tool_step|compaction
     compaction_event: Mapped[bool] = mapped_column(Boolean, default=False)
     receipt_id: Mapped[str | None] = mapped_column(String(40))
 

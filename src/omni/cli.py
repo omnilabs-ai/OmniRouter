@@ -22,6 +22,8 @@ db_app = typer.Typer(help="Database schema (Alembic).", no_args_is_help=True)
 catalog_app = typer.Typer(help="Model catalog and pricing.", no_args_is_help=True)
 app.add_typer(db_app, name="db")
 app.add_typer(catalog_app, name="catalog")
+workloads_app = typer.Typer(help="Workloads: segmentation, stats, merges.", no_args_is_help=True)
+app.add_typer(workloads_app, name="workloads")
 
 
 def _show_version(value: bool) -> None:
@@ -171,6 +173,113 @@ def ingest(
         typer.echo("redacted: " + ", ".join(f"{k}={v}" for k, v in sorted(r.redactions.items())))
     for lineno, err in r.invalid:
         typer.echo(f"  line {lineno}: {err}", err=True)
+    if r.workloads_created:
+        typer.echo("new workloads: " + ", ".join(r.workloads_created))
+
+
+# ----------------------------------------------------------------------------- workloads
+
+
+def _workload(session, ref: str):
+    from sqlalchemy import select
+
+    from omni.models import Workload
+
+    wl = session.get(Workload, ref) or session.scalar(select(Workload).where(Workload.name == ref))
+    if wl is None:
+        _fail(f"workload {ref!r} not found (omni workloads list)")
+    return wl
+
+
+@workloads_app.command("segment")
+def workloads_segment(
+    all_requests: Annotated[
+        bool, typer.Option("--all", help="re-fingerprint every request, not only unassigned")
+    ] = False,
+) -> None:
+    """Attach unassigned requests to workloads by fingerprint (ADR 0006)."""
+    from omni.db import session_scope
+    from omni.workloads import segment
+
+    with session_scope() as s:
+        r = segment(s, all_requests=all_requests)
+    typer.echo(
+        f"moved {r.moved}, unchanged {r.unchanged}, no content {r.no_content}; "
+        f"new workloads: {', '.join(r.created) or 'none'}"
+    )
+
+
+@workloads_app.command("refresh")
+def workloads_refresh(days: Annotated[int, typer.Option(help="trailing window")] = 30) -> None:
+    """Recompute volume, spend, token mix, cache ratio and incumbent per workload."""
+    from omni.db import session_scope
+    from omni.workloads import refresh
+
+    with session_scope() as s:
+        n = len(refresh(s, days=days))
+    typer.echo(f"refreshed {n} workloads over the last {days} days")
+
+
+@workloads_app.command("list")
+def workloads_list(
+    sort: Annotated[str, typer.Option(help="spend | volume | name")] = "spend",
+) -> None:
+    """List workloads ranked by dollars at stake."""
+    from sqlalchemy import select
+
+    from omni.db import session_scope
+    from omni.models import Workload
+    from omni.workloads.service import step_kind_counts
+
+    keys = {
+        "spend": lambda w: -w.spend_30d,
+        "volume": lambda w: -w.volume_30d,
+        "name": lambda w: w.name,
+    }
+    if sort not in keys:
+        _fail("--sort must be spend, volume or name")
+    with session_scope() as s:
+        rows = sorted(s.scalars(select(Workload)).all(), key=keys[sort])
+        typer.echo(
+            f"{'workload_id':<22} {'name':<24} {'incumbent':<22} "
+            f"{'vol30':>6} {'spend30':>10} {'cache':>6}  step kinds"
+        )
+        for w in rows:
+            kinds = ", ".join(
+                f"{k}={n}" for k, n in sorted(step_kind_counts(s, w.workload_id).items())
+            )
+            cache = "-" if w.cache_read_ratio is None else f"{w.cache_read_ratio:.0%}"
+            typer.echo(
+                f"{w.workload_id:<22} {w.name[:24]:<24} {(w.incumbent_model_id or '-')[:22]:<22} "
+                f"{w.volume_30d:>6} {w.spend_30d:>10.4f} {cache:>6}  {kinds}"
+            )
+
+
+@workloads_app.command("rename")
+def workloads_rename(workload: str, name: str) -> None:
+    """Give a workload a human name."""
+    from omni.db import session_scope
+
+    with session_scope() as s:
+        wl = _workload(s, workload)
+        old, wl.name = wl.name, name
+    typer.echo(f"renamed {old} -> {name}")
+
+
+@workloads_app.command("merge")
+def workloads_merge(src: str, dst: str) -> None:
+    """Move SRC's requests into DST and route SRC's fingerprint to DST from now on."""
+    from omni.db import session_scope
+    from omni.workloads import merge, refresh
+
+    with session_scope() as s:
+        a, b = _workload(s, src), _workload(s, dst)
+        try:
+            moved = merge(s, a, b)
+        except ValueError as e:
+            _fail(str(e))
+        refresh(s)
+        typer.echo(f"moved {moved} requests from {a.name} into {b.name}")
 
 
 if __name__ == "__main__":  # pragma: no cover

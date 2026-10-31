@@ -21,6 +21,7 @@ model ordering for Vercel and OpenRouter.
 - We **do not proxy production traffic** as a requirement of the product. The core ships
   policies and a small decision API into the gateway the customer already runs.
 - Provider adapters are **not rebuilt**. Replays use the LiteLLM SDK (not the proxy) or the
+  *(superseded by ADR 0008: the official `openai` and `anthropic` SDKs, no LiteLLM dependency)*
   provider SDKs directly behind one thin interface; the only provider-specific code we own is
   the explicit parameter mapping (effort, thinking, response format) that must never be
   silently dropped.

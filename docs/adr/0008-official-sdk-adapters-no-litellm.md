@@ -45,6 +45,16 @@ endpoints) and Anthropic's.
   capabilities: effort requested but `reasoning_effort_levels` empty or the level not listed,
   JSON output requested without `json_mode`, tools without `tools` → `UnsupportedParameter`.
   Nothing is dropped silently, and the mapped kwargs are stored on the result.
+  One documented exception: **sampling parameters are not portable to Anthropic.** The
+  Messages API rejects `temperature`, `top_p` and `top_k` as of API version 2026-10-21 and
+  the installed SDK has no such arguments, so a request's `temperature` is not sent to
+  Anthropic candidates; the model samples with its defaults and the result's `mapped_params`
+  carries `dropped: {temperature: ...}`. OpenAI reasoning models may likewise reject
+  `temperature` with a 400, which the runner records per request; a `sampling_params`
+  capability flag in the catalog is the follow-up that would turn that into a pre-send check.
+- **Keys are resolved when an adapter is constructed**, so a missing key is a `MissingApiKey`
+  raised before a `ReplayRun` row exists ("not started" in the CLI), never one error per
+  sampled request.
 - **Message translation for Anthropic**: system messages become the `system` parameter,
   OpenAI-style `tool_calls` become `tool_use` blocks, `role: tool` messages become
   `tool_result` blocks inside a user turn, tool schemas become `{name, description,

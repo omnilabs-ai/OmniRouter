@@ -123,7 +123,10 @@ def run_replay(
     if missing:
         summary.warnings.append(f"{missing} sampled request ids no longer exist")
 
-    adapter = adapter or adapter_for(model.provider)
+    # A dry run sends nothing, so it must work without provider credentials; a real run
+    # resolves the adapter (and its key) here, before any row is written.
+    if adapter is None and not dry_run:
+        adapter = adapter_for(model.provider)
     run = None
     if not dry_run:
         run = ReplayRun(

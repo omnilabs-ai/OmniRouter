@@ -184,6 +184,20 @@ def test_unsupported_effort_recorded_without_sending(env):
         assert all("UnsupportedParameter" in x.error for x in r.run.results)
 
 
+def test_missing_key_fails_before_a_run_is_created(env, monkeypatch):
+    """Regression: a missing provider key used to surface as one error per sampled request
+    and a `failed` run; it must raise MissingApiKey before any ReplayRun row exists."""
+    from omni.replay import MissingApiKey
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    engine, store = env
+    with session_scope(engine) as s:
+        wl, smp = _uniform_workload(s, store, n=2)
+        with pytest.raises(MissingApiKey, match="ANTHROPIC_API_KEY"):
+            run_replay(s, store, smp, Candidate("claude-haiku-5-5"), 1.0)
+        assert s.scalar(select(func.count()).select_from(ReplayRun)) == 0
+
+
 def test_dry_run_estimates_and_writes_nothing(env):
     engine, store = env
     with session_scope(engine) as s:

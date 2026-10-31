@@ -25,7 +25,9 @@ BASE_URLS = {
     "google": "https://generativelanguage.googleapis.com/v1beta/openai/",
     "together_ai": "https://api.together.xyz/v1",
 }
-DEFAULT_MAX_TOKENS = 4096  # Anthropic requires max_tokens; used when the request had none
+# Anthropic requires max_tokens; used when the request had none. 16k is the SDK guidance for
+# non-streaming calls; the run budget bounds spend, an unused ceiling costs nothing.
+DEFAULT_MAX_TOKENS = 16000
 
 
 class UnsupportedParameter(ValueError):
@@ -231,7 +233,10 @@ def map_anthropic_params(req: ReplayRequest) -> dict[str, Any]:
     if system:
         kwargs["system"] = system
     if p.get("temperature") is not None:
-        kwargs["temperature"] = p["temperature"]
+        # The Messages API rejects sampling parameters (temperature, top_p, top_k) as of API
+        # version 2026-10-21 and the installed SDK no longer accepts them. The request is sent
+        # with the model's default sampling; the drop is recorded on the result, not silent.
+        kwargs["_dropped"] = {"temperature": p["temperature"]}
     if req.tools:
         kwargs["tools"] = _anthropic_tools(req.tools)
     output_config: dict[str, Any] = {}
@@ -290,12 +295,15 @@ class OpenAICompatAdapter:
         self.base_url = base_url
         self.api_key_env = api_key_env
         self.timeout_s = timeout_s
+        # Resolve the key at construction so a missing key fails before a run is created,
+        # instead of once per sampled request inside the runner's catch-all.
+        self._key = _api_key(api_key_env)
 
     def complete(self, req: ReplayRequest) -> ReplayResponse:
         from openai import OpenAI
 
         client = OpenAI(
-            api_key=_api_key(self.api_key_env),
+            api_key=self._key,
             base_url=self.base_url,
             timeout=self.timeout_s,
             max_retries=0,
@@ -332,14 +340,14 @@ class AnthropicAdapter:
 
     def __init__(self, timeout_s: float = 120.0):
         self.timeout_s = timeout_s
+        self._key = _api_key(KEY_ENV["anthropic"])  # fail before any run is created
 
     def complete(self, req: ReplayRequest) -> ReplayResponse:
         from anthropic import Anthropic
 
-        client = Anthropic(
-            api_key=_api_key(KEY_ENV["anthropic"]), timeout=self.timeout_s, max_retries=0
-        )
+        client = Anthropic(api_key=self._key, timeout=self.timeout_s, max_retries=0)
         kwargs = map_anthropic_params(req)
+        dropped = kwargs.pop("_dropped", None)
         t0 = time.perf_counter()
         try:
             resp = client.messages.create(**kwargs)
@@ -365,7 +373,7 @@ class AnthropicAdapter:
             raw_model=resp.model,
             provider_region=getattr(resp.usage, "inference_geo", None),
             extras=extras,
-            mapped_params=_audit(kwargs),
+            mapped_params=_audit(kwargs) | ({"dropped": dropped} if dropped else {}),
         )
 
 

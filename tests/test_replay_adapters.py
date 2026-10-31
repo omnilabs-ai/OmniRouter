@@ -160,7 +160,25 @@ def test_anthropic_params_translate_messages_tools_effort_and_schema():
     }
     assert "thinking" not in kw and "budget_tokens" not in str(kw)
     plain = map_anthropic_params(ReplayRequest("claude-x", [{"role": "user", "content": "hi"}]))
-    assert plain["max_tokens"] == 4096 and "output_config" not in plain and "system" not in plain
+    assert plain["max_tokens"] == 16000 and "output_config" not in plain and "system" not in plain
+    assert "_dropped" not in plain
+
+
+def test_anthropic_params_drop_temperature_but_record_it():
+    """The Messages API rejects sampling parameters (API version 2026-10-21) and the installed
+    SDK has no `temperature` argument, so it must never reach the call; the drop is recorded."""
+    kw = map_anthropic_params(
+        ReplayRequest("claude-x", [{"role": "user", "content": "hi"}], params={"temperature": 0})
+    )
+    assert "temperature" not in kw
+    assert kw.pop("_dropped") == {"temperature": 0}
+    # everything left is a real messages.create keyword
+    import inspect
+
+    from anthropic.resources.messages import Messages
+
+    accepted = set(inspect.signature(Messages.create).parameters)
+    assert set(kw) <= accepted, set(kw) - accepted
     with pytest.raises(UnsupportedParameter, match="json_object"):
         map_anthropic_params(
             ReplayRequest("claude-x", [], params={"response_format": {"type": "json_object"}})
@@ -188,6 +206,8 @@ def test_classify_marks_rate_limit_and_5xx_transient():
 
 def test_registry_and_fixture_override(tmp_path, monkeypatch):
     monkeypatch.delenv("OMNI_REPLAY_ADAPTER", raising=False)
+    for env in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "TOGETHER_API_KEY"):
+        monkeypatch.setenv(env, "test-key")  # adapters resolve keys at construction
     assert adapter_for("anthropic").name == "anthropic"
     a = adapter_for("google")
     assert (
@@ -217,8 +237,11 @@ def test_registry_and_fixture_override(tmp_path, monkeypatch):
         fx.complete(ReplayRequest("m", [], request_id="r2"))
 
 
-def test_missing_api_key_is_a_clear_error_before_any_call(monkeypatch):
+def test_missing_api_key_is_a_clear_error_at_construction(monkeypatch):
+    """Keys are resolved when the adapter is built, so a run is never created without one."""
     monkeypatch.delenv("TOGETHER_API_KEY", raising=False)
-    adapter = OpenAICompatAdapter("together_ai", "https://api.together.xyz/v1", "TOGETHER_API_KEY")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     with pytest.raises(MissingApiKey, match="TOGETHER_API_KEY"):
-        adapter.complete(ReplayRequest("Qwen/x", [{"role": "user", "content": "hi"}]))
+        OpenAICompatAdapter("together_ai", "https://api.together.xyz/v1", "TOGETHER_API_KEY")
+    with pytest.raises(MissingApiKey, match="ANTHROPIC_API_KEY"):
+        adapter_for("anthropic")

@@ -26,6 +26,7 @@ are ignored, so a file can carry a header comment.
 | `fallback_chain` | list of strings | Models tried, in order. |
 | `session_id`, `step_index` | string, int | Agent sessions: step k of the session. |
 | `compaction_event` | bool | True when this step followed a context compaction. |
+| `app_tag` | string | Optional label for the application or route that made the call (e.g. `support-triage`). Part of the workload fingerprint (ADR 0006); tag the app, not the deployment. |
 
 Everything in `messages`, `tools` arguments and `response` is redacted before it is stored
 (ADR 0005); the database row keeps only metadata and a `content_ref` key.

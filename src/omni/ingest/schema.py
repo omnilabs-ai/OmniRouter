@@ -100,6 +100,7 @@ class NormalizedRequest(BaseModel):
     session_id: str | None = None
     step_index: int | None = Field(default=None, ge=0)
     compaction_event: bool = False
+    app_tag: str | None = Field(default=None, max_length=120)  # app/route label for segmentation
 
     @field_validator("ts", mode="after")
     @classmethod
@@ -127,6 +128,7 @@ class NormalizedRequest(BaseModel):
         the call, and the response to compare against. Never written unredacted."""
         return {
             "request_id": self.request_id,
+            "app_tag": self.app_tag,
             "messages": [m.model_dump(mode="json", exclude_none=True) for m in self.messages],
             "tools": self.tools,
             "params": self.params.model_dump(mode="json", exclude_none=True),

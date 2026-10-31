@@ -1,0 +1,12 @@
+# gitleaks configuration for OmniRouter (used by the "secrets" CI job).
+# Extends the default ruleset; only known false positives are allowlisted.
+title = "OmniRouter gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known false positives"
+# prodenv.yml is a conda environment export; package pins like
+# "fastapi=0.112.2=py312haa95532_0" trip the generic-api-key rule.
+paths = ['''^prodenv\.yml$''']

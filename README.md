@@ -68,7 +68,8 @@ aggregator, or a hosted inference marketplace.
 | Project, CI, conventions, ADRs | done (PR 1) | `omni --version` |
 | Core data model and migrations: `ModelCatalog`, `Workload`, `Request`, `Outcome` | done (PR 2) | `omni db upgrade` |
 | Model catalog, pricing table, cost calculator | done (PR 3) | `omni catalog sync`, `omni catalog show` |
-| Ingest, workload segmentation, sampling | next (PRs 4–6) | `omni ingest`, `omni workloads`, `omni sample` |
+| Ingest: JSONL import, redaction, content by reference | done (PR 4) | `omni ingest --from FILE.jsonl` |
+| Workload segmentation, sampling | next (PRs 5–6) | `omni workloads`, `omni sample` |
 | Shadow replay, scoring, recommendation | PRs 7–11 | `omni replay`, `omni score`, `omni recommend` |
 | Collectors, observe-only sidecar, policy compiler, receipts | PRs 12–15 | |
 
